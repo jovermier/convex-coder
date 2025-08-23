@@ -1,0 +1,118 @@
+{
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": {
+    "editor.autoIndent": "keep",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  },
+  "breadcrumbs.enabled": true,
+  "chat.agent.enabled": true,
+  "chat.tools.autoApprove": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.useFlatConfig": true,
+  "editor.fontSize": 14,
+  "editor.insertSpaces": true,
+  "editor.linkedEditing": true,
+  "editor.minimap.enabled": true,
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "explorer.confirmDelete": false,
+  "extensions.autoUpdate": true,
+  "files.associations": {
+    "*.spec.ts": "typescript",
+    "*.tf": "terraform",
+    "*.yaml": "yaml",
+    "*.yml": "yaml",
+    "Dockerfile*": "dockerfile"
+  },
+  "files.autoSave": "off",
+  "files.autoSaveDelay": 1000,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "github.copilot.chat.agent.thinkingTool": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.completionContext.typescript.mode": "on",
+  "github.copilot.chat.generateTests.codeLens": true,
+  "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+  "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+  "github.copilot.chat.languageContext.typescript.enabled": true,
+  "github.copilot.chat.notebook.followCellExecution.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "chat.math.enabled": false,
+  "chat.mcp.assisted.nuget.enabled": true,
+  "chat.todoListTool.enabled": true,
+  "workbench.secondarySideBar.defaultVisibility": "visible",
+  "remote.SSH.connectTimeout": 60,
+  "remote.SSH.serverInstallPath": {},
+  "remote.portsAttributes": {
+    "1337": { "onAutoForward": "silent" },
+    "3001": { "onAutoForward": "silent" },
+    "4000": { "onAutoForward": "silent" },
+    "5000": { "onAutoForward": "silent" },
+    "5432": { "onAutoForward": "silent" },
+    "8025": { "onAutoForward": "silent" },
+    "8082": { "onAutoForward": "silent" },
+    "9000": { "onAutoForward": "silent" },
+    "9693": { "onAutoForward": "silent" },
+    "9695": { "onAutoForward": "silent" }
+  },
+  "security.workspace.trust.banner": "never",
+  "security.workspace.trust.emptyWindow": true,
+  "security.workspace.trust.enabled": false,
+  "security.workspace.trust.startupPrompt": "never",
+  "security.workspace.trust.untrustedFiles": "open",
+  "telemetry.enableCrashReporter": false,
+  "telemetry.enableTelemetry": false,
+  "telemetry.telemetryLevel": "off",
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.fontSize": 14,
+  "update.mode": "manual",
+  "vscode-server.acceptServerLicenseTerms": true,
+  "workbench.colorTheme": "Default Dark Modern",
+  "workbench.editor.enablePreview": true,
+  "workbench.editor.labelFormat": "short",
+  "files.autoSaveWhenNoErrors": true,
+  "files.autoSaveWorkspaceFilesOnly": true,
+  "typescript.preferences.organizeImports": {
+    // Place all module side-effect imports (e.g. import './polyfills') at the top
+    "sideEffectImportsFirst": true,
+    // Group and sort external modules (node_modules) before internal modules
+    "groupExternalImports": true,
+    // Sort external imports alphabetically by module name
+    "sortExternalImports": "asc",
+    // Group internal (relative) imports after external imports
+    "groupInternalImports": true,
+    // Sort internal imports alphabetically by path
+    "sortInternalImports": "asc",
+    // Group type-only imports separately (import type ...)
+    "groupTypeImports": true,
+    // Place type imports after value imports
+    "typeImportsPosition": "after",
+    // Sort named imports within a statement alphabetically
+    "sortNamedImports": "asc",
+    // Remove unused imports automatically
+    "removeUnusedImports": true,
+    // Merge duplicate imports from the same module
+    "mergeDuplicateImports": true,
+    // Insert a blank line between each import group
+    "insertBlankLinesBetweenGroups": true
+  },
+  "git.useIntegratedAskPass": false,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "typescript.validate.enable": true,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true
+  }
+}

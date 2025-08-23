@@ -20,7 +20,11 @@
     "format": "prettier --write \"./src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "eslint . --quiet",
-    "check": "npm run typecheck && npm run lint"
+    "check": "npm run typecheck && npm run lint",
+    "context:prune": "node scripts/context-pruner.js prune",
+    "context:prune-all": "node scripts/context-pruner.js prune",
+    "knowledge:extract": "node scripts/context-knowledge-manager.js extract",
+    "knowledge:extract-all": "node scripts/context-knowledge-manager.js extract-all"
   },
   "keywords": [
     "convex",

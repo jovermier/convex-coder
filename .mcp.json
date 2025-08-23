@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "docs": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/home/coder/repo"],
+      "env": {
+        "MCP_SERVER_NAME": "filesystem"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN:-}"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/home/coder/repo"],
+      "env": {
+        "MCP_SERVER_NAME": "context7"
+      }
+    },
+    "serena": {
+      "command": "npx",
+      "args": ["@cyanheads/git-mcp-server"],
+      "env": {
+        "MCP_SERVER_NAME": "serena",
+        "GIT_REPOSITORY_PATH": "/home/coder/repo"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp"],
+      "env": {
+        "MCP_SERVER_NAME": "playwright"
+      }
+    },
+    "coder": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-coder"],
+      "env": {
+        "MCP_SERVER_NAME": "coder"
+      }
+    }
+  }
+}
