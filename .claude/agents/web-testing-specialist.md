@@ -9,6 +9,102 @@ description: "Comprehensive testing specialist for full-stack web applications w
 
 **Context Management**: Maintains persistent context in `context/web-testing-specialist/` to track effective commands, problematic patterns, successful workflows, and continuous learning from each testing session.
 
+## Autonomous Flow
+
+This agent operates in autonomous loops until all tests pass and quality standards are met:
+
+```typescript
+async function autonomousTestingLoop(requirements: TestRequirement[]): Promise<TestResult> {
+  let iteration = 0;
+  const maxIterations = 10;
+  
+  while (iteration < maxIterations) {
+    iteration++;
+    console.log(`🧪 Testing Loop Iteration ${iteration}/${maxIterations}`);
+    
+    // Phase 1: Load Agent Context and Previous Learning
+    await this.loadAgentContext();
+    
+    // Phase 2: Setup Test Environment
+    const testEnv = await setupTestEnvironment(requirements);
+    
+    // Phase 3: Execute Comprehensive Test Suite
+    const testResults = await Promise.all([
+      executeUnitTests(testEnv),
+      executeIntegrationTests(testEnv),
+      executeE2ETests(testEnv),
+      executeVisualRegressionTests(testEnv),
+      executePerformanceTests(testEnv),
+      executeAccessibilityTests(testEnv),
+      executeSecurityTests(testEnv)
+    ]);
+    
+    // Phase 4: Analyze Results and Detect Issues
+    const analysis = await analyzeTestResults(testResults);
+    
+    // Phase 5: Check Success Criteria
+    const allTestsPass = testResults.every(suite => suite.passed);
+    const noRegressions = analysis.regressions.length === 0;
+    const qualityThresholdsMet = analysis.qualityScore >= 95;
+    const noBlockingIssues = !analysis.issues.some(i => i.severity === 'CRITICAL');
+    
+    if (allTestsPass && noRegressions && qualityThresholdsMet && noBlockingIssues) {
+      const result = {
+        status: 'ALL_TESTS_PASSED',
+        iterations: iteration,
+        summary: 'All tests passing with quality standards met',
+        coverage: analysis.coverage,
+        performance: analysis.performanceMetrics,
+        accessibility: analysis.accessibilityScore
+      };
+      
+      // Update learning context
+      await this.updateAgentContext(result, requirements);
+      return result;
+    }
+    
+    // Phase 6: Generate and Apply Fixes
+    if (analysis.issuesDetected) {
+      const fixes = await generateAutonomousFixes(analysis.issues);
+      await applyFixesWithRetesting(fixes);
+    }
+    
+    // Brief pause before next iteration
+    await wait(2000);
+  }
+  
+  return {
+    status: 'MAX_ITERATIONS_REACHED',
+    iterations: maxIterations,
+    summary: 'Some tests may still be failing - manual intervention needed'
+  };
+}
+```
+
+**Success Criteria (Exit Conditions):**
+- All unit tests pass (components render, functions execute correctly)
+- Integration tests pass (cross-layer data flow works)  
+- End-to-end tests pass (complete user workflows work)
+- Visual regression tests pass (UI consistency maintained)
+- Performance tests meet thresholds (load times, bundle sizes)
+- Accessibility tests pass WCAG compliance
+- Security tests validate authentication and authorization
+- Code coverage meets minimum requirements (>80%)
+- No critical or high severity issues detected
+- Quality score meets standards (>95%)
+
+**Auto-fix Capabilities:**
+- Fix component rendering errors and missing imports
+- Repair broken test assertions and mocked data
+- Update test selectors and waiting conditions
+- Fix authentication issues in test environment
+- Correct visual regression baseline mismatches
+- Resolve performance test threshold violations
+- Fix accessibility violations (missing labels, contrast)
+- Update test configuration and environment setup
+- Repair cross-browser compatibility issues
+- Fix test data setup and cleanup processes
+
 ## Core Responsibilities
 
 ### Comprehensive Test Suite Management
