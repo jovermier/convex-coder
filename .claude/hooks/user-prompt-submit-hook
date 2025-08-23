@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Claude Code User Prompt Submit Hook
-# Automatically manages agent sessions and context based on user prompts
+# Routes user prompts to appropriate specialist agents
 
 set -e
 
@@ -14,34 +14,40 @@ cd "$PROJECT_ROOT"
 # Log all user prompts for analysis
 echo "[$TIMESTAMP] User prompt: $USER_PROMPT" >> .claude/session.log
 
-# Agent command detection and session management
+# Agent command detection with CORRECT agent names
 detect_agent_commands() {
     local prompt="$1"
     
-    # Agent-specific commands
-    if [[ "$prompt" =~ @test-comprehensive ]]; then
-        echo "web-testing-specialist"
+    # Command-based routing (highest priority)
+    if [[ "$prompt" =~ @feature-complete ]]; then
+        echo "Orchestrator"  # Feature-complete uses Orchestrator to coordinate
     elif [[ "$prompt" =~ @agent-orchestrate ]]; then
-        echo "orchestrator"
-    elif [[ "$prompt" =~ @feature-complete ]]; then
-        echo "fullstack-feature-creator"
-    elif [[ "$prompt" =~ @health-check ]]; then
-        echo "performance-engineer"
+        echo "Orchestrator"
+    elif [[ "$prompt" =~ @test-comprehensive ]]; then
+        echo "Web Testing Specialist"
+    elif [[ "$prompt" =~ @health-check|@performance ]]; then
+        echo "Performance Engineer"
     elif [[ "$prompt" =~ @visual-regression ]]; then
-        echo "web-testing-specialist"
-    # Generic agent work detection
-    elif [[ "$prompt" =~ "schema"|"database"|"migration" ]]; then
-        echo "convex-schema-manager"
-    elif [[ "$prompt" =~ "component"|"react"|"ui" ]]; then
-        echo "react-convex-builder"
-    elif [[ "$prompt" =~ "function"|"mutation"|"query"|"convex" ]]; then
-        echo "convex-function-generator"
-    elif [[ "$prompt" =~ "auth"|"login"|"permission" ]]; then
-        echo "convex-auth-specialist"
-    elif [[ "$prompt" =~ "test"|"playwright"|"e2e"|"visual" ]]; then
-        echo "web-testing-specialist"
-    elif [[ "$prompt" =~ "performance"|"optimization"|"bundle" ]]; then
-        echo "performance-engineer"
+        echo "Web Testing Specialist"
+        
+    # Context-based routing (when no explicit command)
+    elif [[ "$prompt" =~ "orchestrate"|"coordinate"|"epic"|"multiple features" ]]; then
+        echo "Orchestrator"
+    elif [[ "$prompt" =~ "implement feature"|"create feature"|"build feature" ]] && \
+         [[ "$prompt" =~ "simple"|"basic"|"small"|"quick" ]]; then
+        echo "Fullstack Feature Creator"  # For simple features
+    elif [[ "$prompt" =~ "schema"|"database"|"table"|"index"|"migration" ]]; then
+        echo "Convex Schema Manager"
+    elif [[ "$prompt" =~ "component"|"react"|"ui"|"frontend"|"interface" ]]; then
+        echo "React Convex Builder"
+    elif [[ "$prompt" =~ "query"|"mutation"|"action"|"function"|"backend"|"api" ]]; then
+        echo "Convex Function Generator"
+    elif [[ "$prompt" =~ "auth"|"login"|"oauth"|"permission"|"role"|"security" ]]; then
+        echo "Convex Auth Specialist"
+    elif [[ "$prompt" =~ "test"|"playwright"|"e2e"|"visual"|"regression" ]]; then
+        echo "Web Testing Specialist"
+    elif [[ "$prompt" =~ "performance"|"optimization"|"speed"|"bundle"|"slow" ]]; then
+        echo "Performance Engineer"
     fi
 }
 
@@ -66,8 +72,33 @@ DETECTED_AGENT=$(detect_agent_commands "$USER_PROMPT")
 if [[ -n "$DETECTED_AGENT" ]]; then
     TASK_DESC=$(extract_task_description "$USER_PROMPT")
     
-    echo "🤖 Detected agent work: $DETECTED_AGENT"
+    echo "🤖 Routing to: $DETECTED_AGENT"
     echo "📋 Task: $TASK_DESC"
+    
+    # Agent coordination guidance
+    case "$DETECTED_AGENT" in
+        "Orchestrator")
+            echo "💡 Orchestrator will coordinate specialist agents:"
+            echo "   • Convex Schema Manager (schema design)"
+            echo "   • Convex Function Generator (backend)"
+            echo "   • React Convex Builder (frontend)"
+            echo "   • Convex Auth Specialist (auth if needed)"
+            echo "   • Web Testing Specialist (testing)"
+            echo "   • Performance Engineer (optimization)"
+            ;;
+        "Fullstack Feature Creator")
+            echo "💡 Full-stack agent will implement the complete feature"
+            ;;
+        "Web Testing Specialist")
+            echo "💡 Testing specialist will run comprehensive test suite"
+            ;;
+        "Performance Engineer")
+            echo "💡 Performance engineer will optimize and monitor"
+            ;;
+        *)
+            echo "💡 Specialist agent will handle: $DETECTED_AGENT"
+            ;;
+    esac
     
     # Start agent session
     if ./scripts/update-context.sh "$DETECTED_AGENT" session-start "$TASK_DESC" 2>/dev/null; then
@@ -90,15 +121,15 @@ if [[ "$USER_PROMPT" =~ "test"|"playwright"|"visual regression" ]]; then
     
     # Check if test infrastructure exists
     if [[ ! -f "playwright.config.ts" && ! -f "playwright.config.js" ]]; then
-        echo "💡 Hint: Playwright config not found - may need setup"
+        echo "💡 Hint: Playwright config not found - Web Testing Specialist can set it up"
     fi
 fi
 
-# Context awareness - check if this might be continuing previous work
+# Context awareness - check if continuing previous work
 if [[ -f ".claude/current-agent" ]]; then
     CURRENT_AGENT=$(cat .claude/current-agent 2>/dev/null || echo "")
     if [[ -n "$CURRENT_AGENT" && -z "$DETECTED_AGENT" ]]; then
-        # This might be continuation of work
+        # Continuing work with same agent
         if [[ "$USER_PROMPT" =~ "continue"|"next"|"also"|"additionally"|"now" ]]; then
             echo "🔄 Continuing work with: $CURRENT_AGENT"
             TASK_DESC=$(extract_task_description "$USER_PROMPT")
@@ -116,7 +147,7 @@ check_dev_environment() {
         warnings+=("Convex dev server may not be running")
     fi
     
-    # Check for common development issues
+    # Check for environment configuration
     if [[ ! -f ".env" && ! -f ".env.local" ]]; then
         warnings+=("Environment configuration may be missing")
     fi
@@ -127,10 +158,10 @@ check_dev_environment() {
     done
 }
 
-# Only check environment for development-related prompts
+# Check environment for development prompts
 if [[ "$USER_PROMPT" =~ "dev"|"development"|"run"|"start"|"build" ]]; then
     check_dev_environment
 fi
 
-# Exit successfully to allow the prompt to proceed
+# Exit successfully to allow prompt to proceed
 exit 0

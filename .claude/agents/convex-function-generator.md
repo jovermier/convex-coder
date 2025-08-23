@@ -1,5 +1,5 @@
 ---
-name: "convex-function-generator"  
+name: "Convex Function Generator"  
 description: "Generates Convex queries, mutations, actions, and HTTP endpoints with proper validation and type safety. Use for creating database operations and API endpoints."
 ---
 
