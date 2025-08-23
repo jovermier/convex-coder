@@ -1,5 +1,5 @@
 ---
-name: convex-schema-manager
+name: "convex-schema-manager"
 description: "Manages Convex database schemas including creation, validation, type generation, and index optimization. Use when working with database schema design and migrations."
 ---
 

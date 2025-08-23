@@ -72,13 +72,20 @@ article p {
 
 form {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
   margin-top: auto;
   padding-top: 2rem;
   border-top: 2px solid #f3f4f6;
 }
 
-input {
+.message-input-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+input[type="text"] {
   flex: 1;
   padding: 0.75rem 1rem;
   border: 2px solid #e5e7eb;
@@ -87,9 +94,101 @@ input {
   transition: border-color 0.2s;
 }
 
-input:focus {
+input[type="text"]:focus {
   outline: none;
   border-color: #667eea;
+}
+
+.file-button {
+  padding: 0.75rem;
+  min-width: auto;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-button:hover:not(:disabled) {
+  background: #e5e7eb;
+  transform: none;
+  box-shadow: none;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.selected-file button {
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.selected-file button:hover {
+  background: #dc2626;
+  transform: none;
+  box-shadow: none;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-button {
+  padding: 0.75rem;
+  min-width: auto;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-button:hover:not(:disabled) {
+  background: #e5e7eb;
+  transform: none;
+  box-shadow: none;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.selected-file button {
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.selected-file button:hover {
+  background: #dc2626;
+  transform: none;
+  box-shadow: none;
 }
 
 button {
@@ -112,4 +211,62 @@ button:hover:not(:disabled) {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* File preview components */
+.image-preview {
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+.image-preview img {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  display: block;
+  border-radius: 8px 8px 0 0;
+}
+
+.file-name {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.file-attachment {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.file-attachment a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-attachment a:hover {
+  text-decoration: underline;
+}
+
+.file-size {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.file-loading {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  color: #6b7280;
+  font-style: italic;
 }

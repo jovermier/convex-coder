@@ -5,12 +5,21 @@ export const sendMessage = mutation({
   args: {
     user: v.string(),
     body: v.string(),
+    fileData: v.optional(v.string()),
+    fileName: v.optional(v.string()),
+    fileType: v.optional(v.string()),
+    fileSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     console.log("This TypeScript function is running on the server.");
     await ctx.db.insert("messages", {
       user: args.user,
       body: args.body,
+      fileData: args.fileData,
+      fileName: args.fileName,
+      fileType: args.fileType,
+      fileSize: args.fileSize,
+      createdAt: Date.now(),
     });
   },
 });

@@ -52,6 +52,7 @@ export default tseslint.config(
       "generate-env.js",
       "seed-data.js",
       "setup-env.js",
+      "deploy-to-self-hosted.js",
     ],
     languageOptions: {
       ecmaVersion: 2020,

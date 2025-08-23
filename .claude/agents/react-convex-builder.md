@@ -1,5 +1,5 @@
 ---
-name: react-convex-builder
+name: "react-convex-builder"
 description: "Builds React components optimized for Convex integration with real-time updates, proper loading states, and type safety. Use when creating frontend components that interact with Convex data."
 ---
 

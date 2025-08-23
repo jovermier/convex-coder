@@ -1,5 +1,5 @@
 ---
-name: convex-auth-specialist
+name: "convex-auth-specialist"
 description: "Implements authentication and authorization in Convex applications including OAuth setup, user management, protected routes, and role-based access control. Use for auth-related features and security."
 ---
 
