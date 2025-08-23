@@ -2,6 +2,10 @@
   "name": "convex-coder",
   "version": "1.0.0",
   "description": "Convex application for Coder workspace with self-hosted backend support",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/user/convex-coder.git"
@@ -10,11 +14,14 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "dev:backend": "convex dev",
+    "dev:backend:self-hosted": "node dev-backend.js",
+    "deploy:self-hosted": "node deploy-to-self-hosted.js",
+    "generate-env": "node generate-env.js",
     "docker:up": "npm run setup:env && docker compose --env-file .env.docker up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:generate-admin-key": "docker compose exec backend ./generate_admin_key.sh",
-    "setup:env": "node -e \"const fs=require('fs'); const env=fs.readFileSync('.env.docker.example','utf8'); const replaced=env.replace(/\\$\\{([^}]+)\\}/g,(m,k)=>process.env[k]||m); fs.writeFileSync('.env.docker',replaced);\"",
+    "setup:env": "node setup-env.js",
     "convex": "convex",
     "deploy-functions": "convex dev --once",
     "format": "prettier --write \"./src/**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -36,7 +43,7 @@
   "packageManager": "pnpm@10.15.0",
   "dependencies": {
     "@faker-js/faker": "9.9.0",
-    "convex": "1.26.1",
+    "convex": "1.24.8",
     "prettier": "3.6.2",
     "react": "19.1.1",
     "react-dom": "19.1.1"

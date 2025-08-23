@@ -23,7 +23,7 @@ export default function App() {
   return (
     <main className="chat">
       <header>
-        <h1>Convex Chat - Coder Workspace</h1>
+        <h1>Convex Chat</h1>
         <p>
           Connected as <strong>{NAME}</strong>
         </p>

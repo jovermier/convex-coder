@@ -1,15 +1,17 @@
 # Convex Coder - Self-Hosted Convex Application for Coder Workspaces
 
-A Convex chat application optimized for deployment in Coder workspaces with self-hosted backend support. This application automatically integrates with Coder workspace resources (PostgreSQL and S3) for a seamless development experience.
+A full-stack application with Convex backend optimized for deployment in Coder workspaces with self-hosted backend support. Features real-time task management and chat functionality with automatic integration with Coder workspace resources (PostgreSQL and S3).
 
 ## Features
 
 - **Self-hosted Convex backend** with Docker Compose
-- **Automatic integration** with Coder workspace PostgreSQL database
-- **S3 storage integration** using Coder workspace S3 bucket
-- **Real-time chat functionality** powered by Convex
-- **React + TypeScript frontend** with Vite
+- **Task Management System** with real-time updates
+- **Real-time chat functionality** powered by Convex  
+- **React + TypeScript frontend** with Vite and Tailwind CSS
+- **Automatic environment setup** with `generate-env.js`
 - **Convex Dashboard** for monitoring and debugging
+- **Automatic integration** with Coder workspace PostgreSQL database
+- **Local file storage** (S3 disabled due to DNS resolution issues)
 
 ## Architecture
 
@@ -24,31 +26,60 @@ This application is designed to run in a Coder workspace and leverages:
 ### 1. Install Dependencies
 
 ```bash
+# IMPORTANT: Use Convex v1.24.8 (v1.26.1 has issues with self-hosted deployments)
 pnpm install
 ```
 
-### 2. Setup Environment Files
+### 2. Generate Environment Configuration
 
-The Coder workspace will automatically configure environment files, but you can also set them up manually:
+Use the automated setup script to configure environment files and start Docker containers:
 
 ```bash
-# Copy environment templates
+# Automatically setup environment and start services  
+npm run generate-env
+
+# OR manually copy templates if needed
 cp .env.local.example .env.local
 cp .env.docker.example .env.docker
 ```
 
-### 3. Start the Application
+### 3. Start the Backend Services
 
 ```bash
-# Start the self-hosted Convex backend (uses workspace PostgreSQL & S3)
+# Start the self-hosted Convex backend (uses workspace PostgreSQL)
 pnpm run docker:up
 
+# Generate admin key (first time only)
+pnpm run docker:generate-admin-key
+
+# Update .env.local with the admin key from above
+```
+
+### 4. Deploy Convex Functions
+
+```bash
+# Deploy functions to the self-hosted backend
+npx convex dev --once
+
+# OR run in development mode with file watching
+npx convex dev
+```
+
+### 5. Start the Frontend
+
+```bash
 # In a new terminal, start the frontend development server
 pnpm dev
 ```
 
-### 4. Access the Application
+### 6. Access the Application
 
+In a Coder workspace:
+- **Frontend**: `https://main--convex-coder--[username].coder.hahomelabs.com/`
+- **Convex Backend**: `https://convex-backend--main--convex-coder--[username].coder.hahomelabs.com/`
+- **Convex Dashboard**: `https://convex-dashboard--main--convex-coder--[username].coder.hahomelabs.com/`
+
+For local development:
 - **Frontend**: http://localhost:5173
 - **Convex Backend**: http://localhost:3210
 - **Convex Dashboard**: http://localhost:6791
@@ -58,7 +89,7 @@ pnpm dev
 When running in a Coder workspace, this application automatically:
 
 1. **Uses workspace PostgreSQL** for the Convex backend database
-2. **Uses workspace S3** for file storage and exports
+2. **Uses local Docker volumes** for file storage (S3 disabled due to DNS issues)
 3. **Configures environment variables** from workspace settings
 4. **Sets up Docker networking** for service communication
 
@@ -67,47 +98,63 @@ When running in a Coder workspace, this application automatically:
 The following environment variables are automatically configured from your Coder workspace:
 
 - `PGURI`: PostgreSQL connection string
-- `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`: S3 credentials
-- `S3_BUCKET_NAME`: S3 bucket for storage
-- `S3_ENDPOINT`: S3 endpoint URL
+- `S3_*` variables: Currently disabled due to DNS resolution issues in Docker containers
 
 ## Development Commands
 
 ```bash
+# Environment setup
+npm run generate-env     # Auto-configure environment and start Docker
+
 # Frontend development
-pnpm dev                  # Start Vite dev server
-pnpm build               # Build for production
+pnpm dev                 # Start Vite dev server
+pnpm build              # Build for production
 
 # Convex backend management
-pnpm run docker:up       # Start self-hosted backend
-pnpm run docker:down     # Stop backend containers
-pnpm run docker:logs     # View backend logs
+pnpm run docker:up      # Start self-hosted backend
+pnpm run docker:down    # Stop backend containers
+pnpm run docker:logs    # View backend logs
+pnpm run docker:generate-admin-key  # Get admin key for dashboard
+
+# Self-hosted Convex development (Coder workspace)
+pnpm dev:backend:self-hosted  # Watch and regenerate types for self-hosted
+pnpm deploy:self-hosted       # Deploy functions to self-hosted backend
 
 # Convex functions
-pnpm run deploy-functions  # Deploy functions to backend
-pnpm run dev:backend      # Run Convex dev server
+pnpm run deploy-functions # Deploy functions to backend
+pnpm run dev:backend     # Run Convex dev server
 
 # Code quality
-pnpm run lint            # Run ESLint
-pnpm run typecheck       # TypeScript type checking
-pnpm run format          # Format code with Prettier
+pnpm run lint           # Run ESLint
+pnpm run typecheck      # TypeScript type checking
+pnpm run format         # Format code with Prettier
+pnpm run check          # Run both typecheck and lint
 ```
 
 ## Project Structure
 
 ```
 convex-coder/
-├── convex/              # Convex backend functions
-│   ├── chat.ts         # Chat message handlers
-│   └── _generated/     # Auto-generated Convex files
-├── src/                # React frontend
-│   ├── App.tsx        # Main chat component
-│   ├── main.tsx       # Application entry point
-│   └── index.css      # Styles
-├── docker-compose.yml  # Self-hosted Convex services
-├── .env.local.example  # Frontend environment template
-├── .env.docker.example # Backend environment template
-└── vite.config.mts    # Vite configuration
+├── convex/                    # Convex backend functions
+│   ├── chat.ts               # Chat message handlers  
+│   ├── tasks.ts              # Task management functions
+│   ├── users.ts              # User management functions
+│   ├── schema.ts             # Database schema
+│   └── _generated/           # Auto-generated Convex files
+├── src/                      # React frontend
+│   ├── components/           # React components
+│   │   ├── TaskCard.tsx     # Task display component
+│   │   ├── TaskForm.tsx     # Task creation form
+│   │   └── TaskList.tsx     # Task list with search
+│   ├── App.tsx              # Main application component
+│   ├── main.tsx             # Application entry point
+│   └── index.css            # Tailwind CSS styles
+├── generate-env.js           # Auto-configure environment
+├── seed-data.js             # Database seeding script
+├── docker-compose.yml       # Self-hosted Convex services
+├── .env.local.example       # Frontend environment template
+├── .env.docker.example      # Backend environment template
+└── vite.config.mts         # Vite configuration
 ```
 
 ## How It Works
@@ -126,18 +173,51 @@ convex-coder/
 - Ensure PostgreSQL is accessible: `echo $PGURI`
 
 ### Frontend connection issues
-- Verify backend is healthy: `curl http://localhost:3210/version`
-- Check `.env.local` has correct `VITE_CONVEX_URL`
-- Ensure admin key is generated: `pnpm run docker:generate-admin-key`
+- Verify backend is healthy: `curl https://your-backend-url/version`
+- Check `.env.local` has correct `VITE_CONVEX_URL` and `CONVEX_SELF_HOSTED_URL`
+- Ensure admin key is generated and added to `.env.local`
+- For Coder workspaces: Use the correct URLs with your workspace name
+
+### Convex Functions Not Deploying
+
+**Known Issue with v1.26.1:** If you see this error when running `convex dev`:
+```
+TypeError: Cannot read properties of undefined (reading 'length')
+```
+
+**Solution:**
+1. Downgrade to Convex v1.24.8: `pnpm add convex@1.24.8`
+2. Ensure S3 variables are disabled in `.env.docker` (set to empty)
+3. Reset the backend if previously initialized with S3:
+   ```bash
+   docker-compose down -v
+   docker-compose --env-file .env.docker up -d
+   pnpm run docker:generate-admin-key
+   # Update .env.local with new admin key
+   npx convex dev --once
+   ```
+
+### Backend Storage Type Mismatch
+
+If you see an error about database being initialized with S3 but backend started with Local:
+
+**Solution:**
+1. Stop and remove all containers and volumes: `docker-compose down -v`
+2. Start fresh: `docker-compose --env-file .env.docker up -d`
+3. Generate new admin key and update `.env.local`
+4. Deploy functions again: `npx convex dev --once`
 
 ### Database connection errors
 - Verify PostgreSQL credentials: `psql $PGURI -c 'SELECT 1'`
 - Check `.env.docker` has correct `DATABASE_URL` and `POSTGRES_URL`
 
-### S3 storage issues
-- Verify S3 credentials are set in environment
-- Check bucket exists: `echo $S3_BUCKET_NAME`
-- Ensure S3 endpoint is accessible
+### S3 DNS Resolution Issues
+
+**Known Issue:** Docker containers cannot resolve internal Coder workspace S3 endpoints.
+
+**Current Workaround:** S3 is disabled. Files are stored locally in Docker volumes instead.
+
+For detailed documentation about these issues and workarounds, see: `docs/CONVEX_SELF_HOSTED_ISSUE.md`
 
 ## Deployment Notes
 
