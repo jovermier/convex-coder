@@ -77,6 +77,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist", "node_modules", "convex/_generated"],
+    ignores: ["dist", "node_modules", "convex/_generated", "echoes-of-aeria/**"],
   }
 );
