@@ -6,6 +6,9 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  css: {
+    postcss: {},
+  },
   build: {
     chunkSizeWarningLimit: 10000,
   },
