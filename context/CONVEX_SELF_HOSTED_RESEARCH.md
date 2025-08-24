@@ -35,7 +35,7 @@ In practice, to bring this all up in Coder, you can script the following in your
 
 - Run `docker compose up -d` to launch the `backend` and `dashboard`. (Alternatively, you could run the `convex-backend` container with `docker run` manually, but using the provided compose is easier to get all env correct.)
 
-Once the containers are running, **generate an admin key** by exec-ing into the backend container: for example `docker compose exec backend ./generate_admin_key.sh`[stack.convex.dev](https://stack.convex.dev/self-hosted-develop-and-deploy#:~:text=7). This will print an admin key string (format `convex-self-hosted|...`) which you’ll use in the next step.
+Once the containers are running, **generate an admin key** by exec-ing into the backend container: for example `docker compose exec backend ./generate_admin_key.sh`[stack.convex.dev](https://stack.convex.dev/self-hosted-develop-and-deploy#:~:text=7). This will print an admin key string (format `app|...`) which you’ll use in the next step.
 
 ## 2. Convex CLI – Deploying Functions to Your Self-Hosted Instance
 
@@ -47,7 +47,7 @@ With Convex up and running, you want the same developer workflow as cloud (i.e. 
 
 These tell the Convex CLI to send operations to your instance instead of to Convex Cloud[classic.yarnpkg.com](https://classic.yarnpkg.com/en/package/convex#:~:text=,hosted%20deployments). **Make sure not to confuse ports** – use the 3210 URL, _not_ the dashboard’s URL (6791) or the site port. For example:
 
-`export CONVEX_SELF_HOSTED_URL="https://convex-api.<your-domain>"  export CONVEX_SELF_HOSTED_ADMIN_KEY="convex-self-hosted|XXXXXXXXXXX..."`
+`export CONVEX_SELF_HOSTED_URL="https://convex-api.<your-domain>"  export CONVEX_SELF_HOSTED_ADMIN_KEY="app|XXXXXXXXXXX..."`
 
 Now you can run `npx convex deploy` (or `npx convex push`) from your app’s directory. The CLI will connect to your backend and deploy your functions just like it would to the cloud. On Convex v1.26.1, all CLI commands that make sense in self-hosted mode should work (e.g. `convex deploy`, `convex dev`, `convex export`, etc.)[classic.yarnpkg.com](https://classic.yarnpkg.com/en/package/convex#:~:text=,hosted%20deployments). If you run `npx convex dev`, you can even live-reload functions against your self-hosted backend.
 

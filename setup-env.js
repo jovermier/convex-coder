@@ -137,7 +137,9 @@ function setupDockerEnv() {
   let envVars = {};
 
   if (envExists) {
-    console.log("📁 Found existing .env.docker file, updating configuration...");
+    console.log(
+      "📁 Found existing .env.docker file, updating configuration..."
+    );
     const parsed = parseEnvFileWithFormatting(ENV_DOCKER_FILE);
     originalLines = parsed.lines;
     envVars = parsed.variables;
@@ -164,7 +166,11 @@ function setupDockerEnv() {
       workspaceOwnerName: process.env.CODER_WORKSPACE_OWNER_NAME,
     };
 
-    if (coderEnv.workspaceOwnerName && coderEnv.workspaceName && coderEnv.agentUrl) {
+    if (
+      coderEnv.workspaceOwnerName &&
+      coderEnv.workspaceName &&
+      coderEnv.agentUrl
+    ) {
       const url = new URL(coderEnv.agentUrl);
       const protocol = url.protocol;
       const domain = url.hostname;
@@ -174,7 +180,9 @@ function setupDockerEnv() {
       updates.CONVEX_SITE_ORIGIN = `${protocol}//convex-proxy--${baseUrl}`;
       updates.NEXT_PUBLIC_DEPLOYMENT_URL = `${protocol}//convex-api--${baseUrl}`;
 
-      console.log(`🌐 Workspace: ${coderEnv.workspaceName} (${coderEnv.workspaceOwnerName})`);
+      console.log(
+        `🌐 Workspace: ${coderEnv.workspaceName} (${coderEnv.workspaceOwnerName})`
+      );
       console.log(`🔗 Backend URL: ${updates.CONVEX_CLOUD_ORIGIN}`);
     }
   } else {
@@ -185,7 +193,10 @@ function setupDockerEnv() {
   }
 
   // Instance secret (generate if not exists)
-  if (!envVars.INSTANCE_SECRET || envVars.INSTANCE_SECRET === "${INSTANCE_SECRET}") {
+  if (
+    !envVars.INSTANCE_SECRET ||
+    envVars.INSTANCE_SECRET === "${INSTANCE_SECRET}"
+  ) {
     updates.INSTANCE_SECRET = nodeCrypto.randomBytes(32).toString("hex");
     console.log("🔐 Generated new INSTANCE_SECRET");
   }
@@ -200,82 +211,113 @@ function setupDockerEnv() {
   if (process.env.PGURI) {
     // Remove database name from URL as Convex manages it separately
     const pgUrl = new URL(process.env.PGURI);
-    pgUrl.pathname = '';  // Remove the /app from the path
-    
+    pgUrl.pathname = ""; // Remove the /app from the path
+
     const cleanPostgresUrl = pgUrl.toString();
-    
+
     updates.DATABASE_URL = cleanPostgresUrl;
     updates.POSTGRES_URL = cleanPostgresUrl;
-    
+
     // Extract PostgreSQL server SSL certificate for PG_CA_FILE
-    const { execSync } = require('child_process');
+    const { execSync } = require("child_process");
     try {
-      console.log('🔐 Extracting PostgreSQL SSL certificates...');
-      execSync(`timeout 10 openssl s_client -connect ${process.env.PGHOST}.coder-dev-envs:5432 -starttls postgres -showcerts 2>/dev/null | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/postgres_ca_chain.pem`, { stdio: 'inherit' });
-      
+      console.log("🔐 Extracting PostgreSQL SSL certificates...");
+      execSync(
+        `timeout 10 openssl s_client -connect ${process.env.PGHOST}.coder-dev-envs:5432 -starttls postgres -showcerts 2>/dev/null | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/postgres_ca_chain.pem`,
+        { stdio: "inherit" }
+      );
+
       // Set PG_CA_FILE environment variable to use extracted certificates
       updates.PG_CA_FILE = "/tmp/postgres_ca_chain.pem";
-      
+
       // Enable SSL with proper certificate validation
       updates.PGSSLMODE = "require";
-      
+
       console.log("🗄️  Using workspace PostgreSQL database");
-      console.log(`📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL enabled with certificate validation)`);
+      console.log(
+        `📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL enabled with certificate validation)`
+      );
     } catch (error) {
-      console.warn('⚠️  Failed to extract SSL certificates, falling back to SSL disabled mode');
+      console.warn(
+        "⚠️  Failed to extract SSL certificates, falling back to SSL disabled mode"
+      );
       // Fallback to SSL disabled if certificate extraction fails
       updates.DO_NOT_REQUIRE_SSL = "1";
       updates.PGSSLMODE = "disable";
       console.log("🗄️  Using workspace PostgreSQL database");
-      console.log(`📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL disabled - fallback mode)`);
+      console.log(
+        `📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL disabled - fallback mode)`
+      );
     }
   } else {
     console.log("🗄️  Using SQLite database (PostgreSQL not available)");
   }
 
   // Generate MinIO credentials using crypto if not exists or is placeholder
-  if (!envVars.MINIO_ROOT_USER || envVars.MINIO_ROOT_USER === "${MINIO_ROOT_USER}") {
+  if (
+    !envVars.MINIO_ROOT_USER ||
+    envVars.MINIO_ROOT_USER === "${MINIO_ROOT_USER}"
+  ) {
     updates.MINIO_ROOT_USER = `convex-${nodeCrypto.randomBytes(8).toString("hex")}`;
     console.log("🔐 Generated new MinIO root user");
   }
-  
-  if (!envVars.MINIO_ROOT_PASSWORD || envVars.MINIO_ROOT_PASSWORD === "${MINIO_ROOT_PASSWORD}") {
+
+  if (
+    !envVars.MINIO_ROOT_PASSWORD ||
+    envVars.MINIO_ROOT_PASSWORD === "${MINIO_ROOT_PASSWORD}"
+  ) {
     updates.MINIO_ROOT_PASSWORD = nodeCrypto.randomBytes(16).toString("hex");
     console.log("🔐 Generated new MinIO root password");
   }
 
   // Handle S3 configuration if present in template
-  const templateContent = originalLines.join('\n');
-  const hasS3Config = templateContent.includes('AWS_REGION=${AWS_REGION}') && 
-                      !templateContent.includes('# AWS_REGION=${AWS_REGION}');
-  
+  const templateContent = originalLines.join("\n");
+  const hasS3Config =
+    templateContent.includes("AWS_REGION=${AWS_REGION}") &&
+    !templateContent.includes("# AWS_REGION=${AWS_REGION}");
+
   if (hasS3Config) {
-    console.log("🔧 S3 configuration detected in template, setting up S3 credentials...");
-    
+    console.log(
+      "🔧 S3 configuration detected in template, setting up S3 credentials..."
+    );
+
     if (!envVars.AWS_REGION || envVars.AWS_REGION === "${AWS_REGION}") {
       updates.AWS_REGION = process.env.S3_REGION || "us-east-1";
       console.log(`🌍 Using AWS region: ${updates.AWS_REGION}`);
     }
-    
-    if (!envVars.AWS_ACCESS_KEY_ID || envVars.AWS_ACCESS_KEY_ID === "${AWS_ACCESS_KEY_ID}") {
+
+    if (
+      !envVars.AWS_ACCESS_KEY_ID ||
+      envVars.AWS_ACCESS_KEY_ID === "${AWS_ACCESS_KEY_ID}"
+    ) {
       updates.AWS_ACCESS_KEY_ID = updates.MINIO_ROOT_USER;
       console.log("🔐 Set AWS access key to match MinIO user");
     }
-    
-    if (!envVars.AWS_SECRET_ACCESS_KEY || envVars.AWS_SECRET_ACCESS_KEY === "${AWS_SECRET_ACCESS_KEY}") {
+
+    if (
+      !envVars.AWS_SECRET_ACCESS_KEY ||
+      envVars.AWS_SECRET_ACCESS_KEY === "${AWS_SECRET_ACCESS_KEY}"
+    ) {
       updates.AWS_SECRET_ACCESS_KEY = updates.MINIO_ROOT_PASSWORD;
       console.log("🔐 Set AWS secret key to match MinIO password");
     }
   } else {
-    console.log("📁 Using local file storage (S3 configuration commented out in template)");
+    console.log(
+      "📁 Using local file storage (S3 configuration commented out in template)"
+    );
   }
 
   // Set placeholder admin key - will be updated by sync-admin-key.js
-  if (!envVars.NEXT_PUBLIC_ADMIN_KEY || 
-      envVars.NEXT_PUBLIC_ADMIN_KEY === "${NEXT_PUBLIC_ADMIN_KEY}" ||
-      envVars.NEXT_PUBLIC_ADMIN_KEY === "convex-self-hosted|placeholder") {
-    updates.NEXT_PUBLIC_ADMIN_KEY = "convex-self-hosted|placeholder";
-    console.log("🔑 Set placeholder admin key (run 'node sync-admin-key.js' after backend is ready)");
+  if (
+    !envVars.NEXT_PUBLIC_ADMIN_KEY ||
+    envVars.NEXT_PUBLIC_ADMIN_KEY === "${NEXT_PUBLIC_ADMIN_KEY}" ||
+    envVars.NEXT_PUBLIC_ADMIN_KEY === "app|placeholder" ||
+    envVars.NEXT_PUBLIC_ADMIN_KEY === "app|placeholder"
+  ) {
+    updates.NEXT_PUBLIC_ADMIN_KEY = "app|placeholder";
+    console.log(
+      "🔑 Set placeholder admin key (run 'node sync-admin-key.js' after backend is ready)"
+    );
   }
 
   Object.assign(envVars, updates);
@@ -303,7 +345,9 @@ function setupConvexEnv() {
   console.log("🔧 Setting up Convex frontend configuration...");
 
   if (!isCoderEnvironment()) {
-    console.log("⚠️  Not running in a coder environment. Using local development setup.");
+    console.log(
+      "⚠️  Not running in a coder environment. Using local development setup."
+    );
     setupLocalConvexEnv();
     return;
   }
@@ -315,7 +359,9 @@ function setupConvexEnv() {
     workspaceOwnerName: process.env.CODER_WORKSPACE_OWNER_NAME,
   };
 
-  console.log(`🌐 Workspace: ${coderEnv.workspaceName} (${coderEnv.workspaceOwnerName})`);
+  console.log(
+    `🌐 Workspace: ${coderEnv.workspaceName} (${coderEnv.workspaceOwnerName})`
+  );
   console.log(`🔗 Agent: ${coderEnv.workspaceAgentName}`);
 
   const envExists = fs.existsSync(ENV_LOCAL_FILE);
@@ -334,7 +380,9 @@ function setupConvexEnv() {
       originalLines = parsed.lines;
       envVars = parsed.variables;
     } else {
-      console.log("⚠️  No .env.local.example file found, creating minimal configuration...");
+      console.log(
+        "⚠️  No .env.local.example file found, creating minimal configuration..."
+      );
       originalLines = [
         "# Convex Configuration",
         "",
@@ -408,7 +456,9 @@ function setupConvexEnv() {
 
     // Set placeholder admin key - will be updated by sync-admin-key.js
     updates.CONVEX_SELF_HOSTED_ADMIN_KEY = "placeholder";
-    console.log("🔑 Set placeholder admin key (run 'node sync-admin-key.js' after backend is ready)");
+    console.log(
+      "🔑 Set placeholder admin key (run 'node sync-admin-key.js' after backend is ready)"
+    );
 
     // Comment out cloud deployment vars
     delete updates.CONVEX_DEPLOYMENT;
@@ -470,7 +520,9 @@ function setupLocalConvexEnv() {
   writeEnvFileWithFormatting(ENV_LOCAL_FILE, originalLines, envVars);
 
   console.log("✅ Local Convex setup complete!");
-  console.log("🔑 Admin key placeholder set (run 'node sync-admin-key.js' after backend starts)");
+  console.log(
+    "🔑 Admin key placeholder set (run 'node sync-admin-key.js' after backend starts)"
+  );
 }
 
 /**
@@ -478,15 +530,15 @@ function setupLocalConvexEnv() {
  */
 function setupAllEnvFiles() {
   console.log("🚀 Setting up all environment files...");
-  
+
   try {
     // Setup Docker environment
     setupDockerEnv();
     console.log("");
-    
+
     // Setup frontend environment
     setupConvexEnv();
-    
+
     console.log("");
     console.log("✅ All environment files setup complete!");
     console.log("");
