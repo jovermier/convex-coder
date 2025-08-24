@@ -41,6 +41,7 @@ This is a Convex development workspace running in a Coder environment, configure
 - **`CONVEX_ENVIRONMENT_SUMMARY.md`**: Environment setup and configuration documentation
 - **`CONVEX_CODER_TEMPLATE_ANALYSIS.md`**: Comprehensive review of the Coder workspace template implementation
 - **`CONVEX_FILE_UPLOAD_SUMMARY.md`**: Detailed analysis of file upload configuration and S3 compatibility issues
+- **`CONVEX_SELF_HOSTED_RESEARCH.md`**: Comprehensive research on fully self-hosting Convex with complete cloud feature parity
 
 ### Reference Materials
 
