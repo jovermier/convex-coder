@@ -190,29 +190,29 @@ async function orchestrateCartFeature() {
 }
 ```
 
-### Parallel Agent Coordination
+### Sequential Agent Coordination
 
 ```javascript
-// Run independent tasks in parallel for efficiency
-async function parallelCoordination(feature: string) {
-  // These can run in parallel since they're independent
-  const [schemaResult, authResult, performanceBaseline] = await Promise.all([
-    Task({
-      subagent_type: "Convex Schema Manager",
-      description: "Schema setup",
-      prompt: `Design schema for ${feature}`
-    }),
-    Task({
-      subagent_type: "Convex Auth Specialist",
-      description: "Auth setup",
-      prompt: `Setup authentication for ${feature}`
-    }),
-    Task({
-      subagent_type: "Performance Engineer",
-      description: "Baseline capture",
-      prompt: `Capture performance baseline before ${feature}`
-    })
-  ]);
+// Run tasks sequentially to prevent memory issues  
+async function sequentialCoordination(feature: string) {
+  // Run tasks one at a time to avoid heap overflow
+  const schemaResult = await Task({
+    subagent_type: "Convex Schema Manager",
+    description: "Schema setup", 
+    prompt: `Design schema for ${feature}`
+  });
+  
+  const authResult = await Task({
+    subagent_type: "Convex Auth Specialist",
+    description: "Auth setup",
+    prompt: `Setup authentication for ${feature}`
+  });
+  
+  const performanceBaseline = await Task({
+    subagent_type: "Performance Engineer", 
+    description: "Baseline capture",
+    prompt: `Capture performance baseline before ${feature}`
+  });
   
   // These depend on schema, so run after
   const backendResult = await Task({
@@ -317,7 +317,7 @@ await Task({
 
 ❌ **Writing code directly** - You're a coordinator, not a coder
 ❌ **Using wrong agent names** - Must match exactly  
-❌ **Sequential when parallel is possible** - Run independent tasks concurrently
+❌ **Parallel execution** - Always run tasks sequentially to prevent memory crashes
 ❌ **Skipping testing** - Always use Web Testing Specialist
 ❌ **Ignoring performance** - Always use Performance Engineer
 ❌ **Vague delegation** - Provide detailed prompts to agents

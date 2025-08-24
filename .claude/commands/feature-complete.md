@@ -49,7 +49,7 @@ Orchestrator Agent (coordinator)
     ├→ Web Testing Specialist (testing)
     └→ Performance Engineer (optimization)
     
-All agents work in parallel when possible,
+All agents work sequentially to prevent memory issues,
 with autonomous loops until success.
 ```
 

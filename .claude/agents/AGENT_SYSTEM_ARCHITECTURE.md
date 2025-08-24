@@ -155,17 +155,15 @@ async function autonomousAgentLoop() {
 }
 ```
 
-## Parallel Execution
+## Sequential Execution
 
-The Orchestrator runs independent tasks in parallel:
+The Orchestrator runs tasks sequentially to prevent memory issues:
 
 ```javascript
-// These run simultaneously for efficiency
-const [schema, auth, baseline] = await Promise.all([
-  Task({ subagent_type: "convex-schema-manager", ... }),
-  Task({ subagent_type: "convex-auth-specialist", ... }),
-  Task({ subagent_type: "Performance Engineer", ... })
-]);
+// Run tasks one at a time to avoid heap overflow
+const schema = await Task({ subagent_type: "convex-schema-manager", ... });
+const auth = await Task({ subagent_type: "convex-auth-specialist", ... });
+const baseline = await Task({ subagent_type: "Performance Engineer", ... });
 ```
 
 ## Key Improvements Made
