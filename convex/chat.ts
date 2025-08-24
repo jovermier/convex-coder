@@ -94,12 +94,11 @@ export const sendMessage = mutation({
   },
 });
 
-// Function to match the working deployed API
+// Function to match the working deployed API with file support
 export const getMessages = query({
   args: {},
   handler: async (ctx) => {
-    // This function matches the working deployed API structure
-    // The deployed API has messages with: _id, _creationTime, body, user
+    // Extended to include file attachment data for image previews
     const messages = await ctx.db
       .query("messages")
       .collect();
@@ -108,7 +107,14 @@ export const getMessages = query({
       _id: msg._id,
       _creationTime: msg.createdAt || msg._creationTime,
       body: msg.content,
-      user: msg.senderName
+      user: msg.senderName,
+      // File attachment fields for image previews
+      type: msg.type || "text",
+      storageId: msg.storageId,
+      fileName: msg.fileName,
+      fileType: msg.fileType,
+      fileSize: msg.fileSize,
+      fileData: msg.fileData,
     }));
   },
 });

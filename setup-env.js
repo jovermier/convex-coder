@@ -190,14 +190,48 @@ function setupDockerEnv() {
     console.log("🔐 Generated new INSTANCE_SECRET");
   }
 
-  // Instance name (set default if not exists)
+  // Instance name (set default if not exists) - use "app" to match workspace PostgreSQL database
   if (!envVars.INSTANCE_NAME || envVars.INSTANCE_NAME === "${INSTANCE_NAME}") {
-    updates.INSTANCE_NAME = "convex-self-hosted";
-    console.log("🏷️  Set INSTANCE_NAME to: convex-self-hosted");
+    updates.INSTANCE_NAME = "app";
+    console.log("🏷️  Set INSTANCE_NAME to: app (matches workspace database)");
   }
 
-  // Database configuration - disabled PostgreSQL for now
-  console.log("🗄️  Using SQLite database (PostgreSQL disabled temporarily)");
+  // Database configuration - Use workspace PostgreSQL if available
+  if (process.env.PGURI) {
+    // Remove database name from URL as Convex manages it separately
+    const pgUrl = new URL(process.env.PGURI);
+    pgUrl.pathname = '';  // Remove the /app from the path
+    
+    const cleanPostgresUrl = pgUrl.toString();
+    
+    updates.DATABASE_URL = cleanPostgresUrl;
+    updates.POSTGRES_URL = cleanPostgresUrl;
+    
+    // Extract PostgreSQL server SSL certificate for PG_CA_FILE
+    const { execSync } = require('child_process');
+    try {
+      console.log('🔐 Extracting PostgreSQL SSL certificates...');
+      execSync(`timeout 10 openssl s_client -connect ${process.env.PGHOST}.coder-dev-envs:5432 -starttls postgres -showcerts 2>/dev/null | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/postgres_ca_chain.pem`, { stdio: 'inherit' });
+      
+      // Set PG_CA_FILE environment variable to use extracted certificates
+      updates.PG_CA_FILE = "/tmp/postgres_ca_chain.pem";
+      
+      // Enable SSL with proper certificate validation
+      updates.PGSSLMODE = "require";
+      
+      console.log("🗄️  Using workspace PostgreSQL database");
+      console.log(`📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL enabled with certificate validation)`);
+    } catch (error) {
+      console.warn('⚠️  Failed to extract SSL certificates, falling back to SSL disabled mode');
+      // Fallback to SSL disabled if certificate extraction fails
+      updates.DO_NOT_REQUIRE_SSL = "1";
+      updates.PGSSLMODE = "disable";
+      console.log("🗄️  Using workspace PostgreSQL database");
+      console.log(`📊 Database: ${process.env.PGHOST}:${process.env.PGPORT} (SSL disabled - fallback mode)`);
+    }
+  } else {
+    console.log("🗄️  Using SQLite database (PostgreSQL not available)");
+  }
 
   // Generate MinIO credentials using crypto if not exists or is placeholder
   if (!envVars.MINIO_ROOT_USER || envVars.MINIO_ROOT_USER === "${MINIO_ROOT_USER}") {

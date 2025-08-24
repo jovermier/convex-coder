@@ -67,6 +67,21 @@ export const MessageBubble = memo(function MessageBubble({
 
   const renderFileContent = () => {
     const displayUrl = fileUrl || message.fileData;
+    
+    // Debug logging to help track down issues
+    if (message.type === "image" || message.fileType?.startsWith("image/")) {
+      console.log("🖼️ Rendering image message:", {
+        messageId: message._id,
+        fileName: message.fileName,
+        fileType: message.fileType,
+        type: message.type,
+        hasStorageId: !!message.storageId,
+        hasFileData: !!message.fileData,
+        fileUrl,
+        displayUrl
+      });
+    }
+    
     if (!displayUrl || !message.fileName) return null;
 
     if (message.type === "image" || message.fileType?.startsWith("image/")) {

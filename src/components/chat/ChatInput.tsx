@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -31,12 +31,44 @@ export function ChatInput({ onSendMessage, disabled, placeholder = "Type a messa
     }
   }, []);
 
+  // Check if the selected file is an image
+  const isImageFile = (file: File) => {
+    return file.type.startsWith('image/');
+  };
+
+  // Create preview URL for images
+  const getFilePreviewUrl = (file: File) => {
+    if (isImageFile(file)) {
+      return URL.createObjectURL(file);
+    }
+    return null;
+  };
+
   const handleRemoveFile = useCallback(() => {
+    // Clean up object URL to prevent memory leaks
+    if (selectedFile && isImageFile(selectedFile)) {
+      const previewUrl = getFilePreviewUrl(selectedFile);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    }
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, []);
+  }, [selectedFile]);
+
+  // Clean up object URLs on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (selectedFile && isImageFile(selectedFile)) {
+        const previewUrl = getFilePreviewUrl(selectedFile);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+      }
+    };
+  }, [selectedFile]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +81,15 @@ export function ChatInput({ onSendMessage, disabled, placeholder = "Type a messa
     
     try {
       await onSendMessage(message.trim(), selectedFile || undefined);
+      
+      // Clean up object URL after successful send
+      if (selectedFile && isImageFile(selectedFile)) {
+        const previewUrl = getFilePreviewUrl(selectedFile);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+      }
+      
       setMessage("");
       setSelectedFile(null);
       if (fileInputRef.current) {
@@ -84,24 +125,41 @@ export function ChatInput({ onSendMessage, disabled, placeholder = "Type a messa
         {/* File preview */}
         {selectedFile && (
           <Card className="p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(selectedFile.size)}
-                  </p>
+            <div className="flex items-start gap-3">
+              {/* Image preview */}
+              {isImageFile(selectedFile) && (
+                <div className="flex-shrink-0">
+                  <img
+                    src={getFilePreviewUrl(selectedFile)!}
+                    alt={selectedFile.name}
+                    className="w-16 h-16 rounded-lg object-cover border bg-muted"
+                  />
                 </div>
+              )}
+              
+              {/* File details */}
+              <div className="flex items-center justify-between flex-1 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  {!isImageFile(selectedFile) && (
+                    <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(selectedFile.size)}
+                      {isImageFile(selectedFile) && " • Image"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveFile}
+                  className="flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemoveFile}
-                className="flex-shrink-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </Card>
         )}

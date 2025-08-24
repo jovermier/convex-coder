@@ -4,6 +4,48 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { User } from "./useUser";
 
+// Type for the message data returned by Convex backend
+// This extends the basic API response with optional file fields
+interface ConvexMessage {
+  _id: string;
+  _creationTime: number;
+  body: string;
+  user: string;
+  // File attachment fields (may not exist on all messages)
+  type?: "text" | "image" | "file";
+  storageId?: Id<"_storage">;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  fileData?: string;
+}
+
+// Type-safe utility to check if an object has a property
+function hasProperty<T, K extends string>(
+  obj: T,
+  prop: K
+): obj is T & Record<K, unknown> {
+  return typeof obj === 'object' && obj !== null && prop in obj;
+}
+
+// Type-safe message transformation function
+function transformConvexMessage(msg: ConvexMessage) {
+  return {
+    _id: msg._id,
+    _creationTime: msg._creationTime,
+    senderId: msg.user,
+    senderName: msg.user,
+    content: msg.body,
+    type: msg.type ?? ("text" as const), // Use nullish coalescing for cleaner fallback
+    storageId: msg.storageId,
+    fileName: msg.fileName,
+    fileType: msg.fileType,
+    fileSize: msg.fileSize,
+    fileData: msg.fileData,
+    createdAt: msg._creationTime,
+  };
+}
+
 /**
  * Hook for real-time chat using Convex's native WebSocket-based queries
  * This replaces the polling-based approach to eliminate flickering
@@ -11,7 +53,7 @@ import { User } from "./useUser";
 export function useConvexMessages() {
   // Use Convex's real-time query with the working function name
   // IMPORTANT: Never call setState during render - let ErrorBoundary handle errors
-  const messages = useQuery(api.chat.getMessages);
+  const messages = useQuery(api.chat.getMessages) as ConvexMessage[] | undefined;
   
   // Debug: Log what we're getting from Convex
   useEffect(() => {
@@ -20,25 +62,12 @@ export function useConvexMessages() {
     }
   }, [messages]);
   
-  // Transform to match expected format from working API structure
+  // Transform to match expected format using type-safe function
   const transformedMessages = useMemo(() => {
     if (!messages) return [];
     
     try {
-      return messages.map(msg => ({
-        _id: msg._id,
-        _creationTime: msg._creationTime, // Use the actual field from working API
-        senderId: msg.user, // Map 'user' field to senderId
-        senderName: msg.user, // Use user as sender name
-        content: msg.body, // Map 'body' field to content
-        type: "text" as const, // Default to text type
-        storageId: undefined,
-        fileName: undefined,
-        fileType: undefined,
-        fileSize: undefined,
-        fileData: undefined,
-        createdAt: msg._creationTime, // Use creationTime for sorting
-      }));
+      return messages.map(transformConvexMessage);
     } catch (transformError) {
       console.error("Error transforming messages:", transformError);
       return []; // Just return empty array, don't setState during render
