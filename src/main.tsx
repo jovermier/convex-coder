@@ -24,7 +24,7 @@ try {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary onReset={() => window.location.reload()}>
-      <ThemeProvider defaultTheme="light" storageKey="convex-ui-theme">
+      <ThemeProvider defaultTheme="dark" storageKey="convex-ui-theme">
         <ConvexProvider client={convex}>
           <ErrorBoundary onReset={() => window.location.reload()}>
             <App />
