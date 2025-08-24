@@ -45,14 +45,20 @@ export interface FileMessage extends FileMessageBase {
 }
 
 // Union type for all possible message types
-export type Message = TextMessage | ImageMessageWithStorage | ImageMessageWithData | FileMessage;
+export type Message =
+  | TextMessage
+  | ImageMessageWithStorage
+  | ImageMessageWithData
+  | FileMessage;
 
 // Type guard functions for runtime type checking
 export function isTextMessage(message: Message): message is TextMessage {
   return message.type === "text";
 }
 
-export function isImageMessage(message: Message): message is ImageMessageWithStorage | ImageMessageWithData {
+export function isImageMessage(
+  message: Message
+): message is ImageMessageWithStorage | ImageMessageWithData {
   return message.type === "image";
 }
 
@@ -60,10 +66,16 @@ export function isFileMessage(message: Message): message is FileMessage {
   return message.type === "file";
 }
 
-export function hasStorageId(message: Message): message is ImageMessageWithStorage | (FileMessage & { storageId: Id<"_storage"> }) {
-  return 'storageId' in message && message.storageId !== undefined;
+export function hasStorageId(
+  message: Message
+): message is
+  | ImageMessageWithStorage
+  | (FileMessage & { storageId: Id<"_storage"> }) {
+  return "storageId" in message && message.storageId !== undefined;
 }
 
-export function hasFileData(message: Message): message is ImageMessageWithData | (FileMessage & { fileData: string }) {
-  return 'fileData' in message && message.fileData !== undefined;
+export function hasFileData(
+  message: Message
+): message is ImageMessageWithData | (FileMessage & { fileData: string }) {
+  return "fileData" in message && message.fileData !== undefined;
 }

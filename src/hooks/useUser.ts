@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+
+import { faker } from "@faker-js/faker";
 import { useMutation, useQuery } from "convex/react";
+
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { faker } from "@faker-js/faker";
 
 export interface User {
   _id: Id<"users">;
@@ -41,18 +43,21 @@ export function useUser() {
 
         // Set a timeout to ensure we don't hang indefinitely
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Backend connection timeout")), 5000);
+          setTimeout(
+            () => reject(new Error("Backend connection timeout")),
+            5000
+          );
         });
 
         try {
           // Race between backend call and timeout
-          const userId = await Promise.race([
+          const userId = (await Promise.race([
             createUser({
               name: userData.name,
               email: userData.email,
             }),
-            timeoutPromise
-          ]) as Id<"users">;
+            timeoutPromise,
+          ])) as Id<"users">;
 
           const user: User = {
             _id: userId,
@@ -71,14 +76,24 @@ export function useUser() {
                 userId,
                 isOnline: true,
               }),
-              new Promise((_, reject) => setTimeout(() => reject(new Error("Status update timeout")), 2000))
+              new Promise((_, reject) =>
+                setTimeout(
+                  () => reject(new Error("Status update timeout")),
+                  2000
+                )
+              ),
             ]);
           } catch (statusError) {
-            console.warn("updateUserStatus not available or timed out, skipping status update");
+            console.warn(
+              "updateUserStatus not available or timed out, skipping status update"
+            );
           }
         } catch (convexError) {
-          console.warn("Convex backend not available or timed out, using demo mode", convexError);
-          
+          console.warn(
+            "Convex backend not available or timed out, using demo mode",
+            convexError
+          );
+
           // Create demo user with fake ID
           const user: User = {
             _id: "demo-user-123" as any,
@@ -92,7 +107,7 @@ export function useUser() {
         }
       } catch (error) {
         console.error("Failed to initialize user:", error);
-        
+
         // Fallback to demo mode even if something else fails
         const user: User = {
           _id: "demo-user-fallback" as any,

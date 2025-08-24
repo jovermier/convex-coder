@@ -1,6 +1,7 @@
+import { useCallback, useEffect, useState } from "react";
+
 import { useQuery } from "convex/react";
 import { FunctionReference } from "convex/server";
-import { useEffect, useState } from "react";
 
 /**
  * A wrapper around useQuery that provides graceful error handling
@@ -13,36 +14,44 @@ export function useQueryWithFallback<T>(
 ): { data: T | undefined; isDemo: boolean; error: Error | null } {
   const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [queryResult, setQueryResult] = useState<T | undefined>(undefined);
 
-  try {
-    const data = useQuery(query, args);
-    
-    // Reset demo mode if query succeeds
-    useEffect(() => {
-      if (data !== undefined && (isDemo || error)) {
+  // Always call hooks unconditionally
+  const data = useQuery(query, args);
+
+  // Check for query loading/error states via data state
+  const hasData = data !== undefined;
+  const hasQueryError = data === undefined && !isDemo;
+
+  // Handle successful query data
+  useEffect(() => {
+    if (data !== undefined) {
+      setQueryResult(data);
+      if (isDemo || error) {
         setIsDemo(false);
         setError(null);
         console.log("✅ Backend connection restored!");
       }
-    }, [data, isDemo, error]);
+    }
+  }, [data, isDemo, error]);
 
-    return { data, isDemo, error: null };
-  } catch (queryError) {
-    const errorObj = queryError as Error;
-    
-    // Only log the error once when it first occurs
-    useEffect(() => {
-      if (!isDemo) {
-        console.warn("🔄 Backend unavailable, switching to demo mode:", errorObj.message);
+  // Handle query errors - use a timeout to detect prolonged loading as error
+  useEffect(() => {
+    if (data === undefined && !isDemo) {
+      const timer = setTimeout(() => {
+        console.warn("🔄 Backend unavailable, switching to demo mode");
         setIsDemo(true);
-        setError(errorObj);
-      }
-    }, [isDemo]);
+        setError(new Error("Backend connection timeout"));
+        setQueryResult(fallbackData);
+      }, 5000); // 5 second timeout
 
-    return { 
-      data: fallbackData, 
-      isDemo: true, 
-      error: errorObj 
-    };
-  }
+      return () => clearTimeout(timer);
+    }
+  }, [data, isDemo, fallbackData]);
+
+  return {
+    data: isDemo ? fallbackData : queryResult,
+    isDemo,
+    error,
+  };
 }

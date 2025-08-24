@@ -1,0 +1,228 @@
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .message-bubble {
+    border: 2px solid currentColor !important;
+    background: transparent !important;
+  }
+
+  .bg-card,
+  .bg-background {
+    background: transparent !important;
+    border: 2px solid currentColor !important;
+  }
+
+  .bg-primary {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    border: 2px solid ButtonText !important;
+  }
+
+  .text-muted-foreground {
+    color: inherit !important;
+    opacity: 0.9 !important;
+  }
+
+  .border {
+    border: 2px solid currentColor !important;
+  }
+
+  .shadow-sm {
+    box-shadow: 0 0 0 2px currentColor !important;
+  }
+
+  /* Ensure icons are visible */
+  svg {
+    color: inherit !important;
+  }
+
+  /* Ensure buttons have proper contrast */
+  button {
+    border: 2px solid currentColor !important;
+  }
+
+  button:hover,
+  button:focus {
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+
+  /* Input elements */
+  input,
+  textarea {
+    border: 2px solid currentColor !important;
+    background: Field !important;
+    color: FieldText !important;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Forced Colors Mode Support (Windows High Contrast) */
+@media (forced-colors: active) {
+  .message-bubble {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border: 1px solid CanvasText !important;
+  }
+
+  .bg-card,
+  .bg-background {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border: 1px solid CanvasText !important;
+  }
+
+  .bg-primary {
+    background: Highlight !important;
+    color: HighlightText !important;
+    border: 1px solid CanvasText !important;
+  }
+
+  .text-primary {
+    color: LinkText !important;
+  }
+
+  .text-muted-foreground {
+    color: CanvasText !important;
+  }
+
+  /* Buttons */
+  button {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    border: 1px solid ButtonText !important;
+  }
+
+  button:hover,
+  button:focus {
+    background: Highlight !important;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+
+  button:disabled {
+    background: Canvas !important;
+    color: GrayText !important;
+    border: 1px solid GrayText !important;
+  }
+
+  /* Form elements */
+  input,
+  textarea {
+    background: Field !important;
+    color: FieldText !important;
+    border: 1px solid FieldText !important;
+  }
+
+  input:focus,
+  textarea:focus {
+    background: Field !important;
+    color: FieldText !important;
+    outline: 2px solid Highlight !important;
+  }
+
+  /* Links */
+  a {
+    color: LinkText !important;
+  }
+
+  a:visited {
+    color: VisitedText !important;
+  }
+
+  /* Selection */
+  ::selection {
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none !important;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus Visible Enhancement */
+.focus-visible:focus-visible {
+  outline: 2px solid #005fcc !important;
+  outline-offset: 2px !important;
+}
+
+/* Screen Reader Only Class - Use Tailwind's sr-only instead */
+/* .sr-only is now available as a Tailwind utility class */
+
+/* Skip Navigation Link */
+.skip-nav {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 100;
+}
+
+.skip-nav:focus {
+  top: 6px;
+}
+
+/* Enhanced Focus Indicators */
+*:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Ensure sufficient color contrast */
+.text-muted-foreground {
+  color: #666 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-muted-foreground {
+    color: #a1a1a1 !important;
+  }
+}
+
+/* Better visible focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #005fcc !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.2) !important;
+}
+
+/* Loading spinner accessibility */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .loading-spinner::after {
+    content: "Loading...";
+    position: absolute;
+    left: -9999px;
+  }
+}

@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+
 import { User } from "./useUser";
 
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || "http://localhost:3210";
@@ -17,12 +18,12 @@ export function useDirectFileUpload() {
 
       // Create form data for HTTP action
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploaderId', user._id);
+      formData.append("file", file);
+      formData.append("uploaderId", user._id);
 
       // Upload directly to HTTP action endpoint
       const response = await fetch(`${CONVEX_URL}/uploadFile`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
@@ -33,7 +34,7 @@ export function useDirectFileUpload() {
       }
 
       console.log("✅ Direct file upload successful:", result);
-      
+
       return {
         storageId: result.storageId,
         fileId: result.fileId || null, // May not be returned if files table isn't available
@@ -41,7 +42,6 @@ export function useDirectFileUpload() {
         fileType: file.type,
         fileSize: file.size,
       };
-
     } catch (error) {
       console.error("❌ Direct file upload failed:", error);
       throw error;

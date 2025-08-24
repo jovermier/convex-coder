@@ -8,22 +8,22 @@ const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || "http://localhost:3210";
 export async function directQuery(functionPath: string, args: any = {}) {
   try {
     const response = await fetch(`${CONVEX_URL}/api/query`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         path: functionPath,
-        args
-      })
+        args,
+      }),
     });
-    
+
     const result = await response.json();
-    
+
     if (result.status === "error") {
       throw new Error(result.errorMessage || "Query failed");
     }
-    
+
     return result.value || result;
   } catch (error) {
     console.error(`Direct query ${functionPath} failed:`, error);
@@ -34,22 +34,22 @@ export async function directQuery(functionPath: string, args: any = {}) {
 export async function directMutation(functionPath: string, args: any = {}) {
   try {
     const response = await fetch(`${CONVEX_URL}/api/mutation`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         path: functionPath,
-        args
-      })
+        args,
+      }),
     });
-    
+
     const result = await response.json();
-    
+
     if (result.status === "error") {
       throw new Error(result.errorMessage || "Mutation failed");
     }
-    
+
     return result.value || result;
   } catch (error) {
     console.error(`Direct mutation ${functionPath} failed:`, error);

@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+coverage
+.next
+.convex
+*.lock
+.env*
+public
+README.md

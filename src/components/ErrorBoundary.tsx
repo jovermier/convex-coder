@@ -1,7 +1,9 @@
 import React, { ErrorInfo, ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { AlertTriangle, RefreshCw } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
   children?: ReactNode;
@@ -40,7 +42,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       }
 
       return (
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex flex-1 items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-orange-500">
@@ -49,12 +51,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                The Convex backend is temporarily unavailable, but you can still explore all the features with demo data!
+              <div className="text-muted-foreground text-sm">
+                The Convex backend is temporarily unavailable, but you can still
+                explore all the features with demo data!
               </div>
-              <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-2">
-                <div className="font-medium text-primary">✨ Demo Features Available:</div>
-                <ul className="space-y-1 text-muted-foreground">
+              <div className="bg-muted/50 space-y-2 rounded-lg p-3 text-xs">
+                <div className="text-primary font-medium">
+                  ✨ Demo Features Available:
+                </div>
+                <ul className="text-muted-foreground space-y-1">
                   <li>• Modern message bubbles with responsive design</li>
                   <li>• Image preview with lightbox functionality</li>
                   <li>• File upload with download cards</li>
@@ -63,16 +68,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </ul>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  onClick={this.handleReset} 
+                <Button
+                  onClick={this.handleReset}
                   variant="outline"
                   className="flex-1"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Try Again
                 </Button>
-                <Button 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  onClick={() => window.location.reload()}
                   variant="default"
                   className="flex-1"
                 >

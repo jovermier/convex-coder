@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-require-imports, no-undef */
 
 const fs = require("fs");
 const path = require("path");
@@ -67,7 +69,7 @@ function writeEnvFileWithFormatting(filePath, originalLines, updatedVariables) {
     if (equalIndex > 0) {
       const key = trimmed.substring(0, equalIndex).trim();
 
-      if (updatedVariables.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(updatedVariables, key)) {
         const beforeEquals = line.substring(0, line.indexOf(key) + key.length);
         const afterEqualsStart = line.indexOf("=", line.indexOf(key));
         const afterEqualsEnd = line.indexOf("=", line.indexOf(key)) + 1;

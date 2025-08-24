@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
+
 import { useQuery } from "convex/react";
 import { FunctionReference } from "convex/server";
-import { useEffect, useState } from "react";
 
 /**
  * A safer version of useQuery that handles errors gracefully
@@ -13,30 +14,35 @@ export function useSafeQuery<T>(
 ): { data: T | undefined; error: Error | null; isLoading: boolean } {
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  let data: T | undefined;
-  
-  try {
-    // Clear error when query is retried
-    if (error) {
-      setError(null);
-    }
-    
-    data = useQuery(query, args);
-    
-    // Update loading state
-    useEffect(() => {
-      if (data !== undefined) {
-        setIsLoading(false);
+  const [queryResult, setQueryResult] = useState<T | undefined>(undefined);
+
+  // Always call hooks unconditionally
+  const data = useQuery(query, args);
+
+  // Handle successful query data
+  useEffect(() => {
+    if (data !== undefined) {
+      setQueryResult(data);
+      setIsLoading(false);
+      if (error) {
+        setError(null);
       }
-    }, [data]);
-    
-  } catch (queryError) {
-    console.warn("Query failed:", queryError);
-    setError(queryError as Error);
-    setIsLoading(false);
-    data = fallbackValue;
-  }
-  
-  return { data, error, isLoading };
+    }
+  }, [data, error]);
+
+  // Handle potential timeouts/errors via loading state
+  useEffect(() => {
+    if (data === undefined && isLoading) {
+      const timer = setTimeout(() => {
+        console.warn("Query timeout - using fallback");
+        setError(new Error("Query timeout"));
+        setIsLoading(false);
+        setQueryResult(fallbackValue);
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timer);
+    }
+  }, [data, isLoading, fallbackValue]);
+
+  return { data: queryResult, error, isLoading };
 }
