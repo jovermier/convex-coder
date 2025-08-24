@@ -140,8 +140,8 @@ services:
 
 ```env
 # Self-hosted deployment URL
-VITE_CONVEX_URL=https://convex-api--main--convex-coder--jovermier.coder.hahomelabs.com
-CONVEX_SELF_HOSTED_URL=https://convex-api--main--convex-coder--jovermier.coder.hahomelabs.com
+VITE_CONVEX_URL=https://convex-api--main--<workspace>--<owner>.coder.hahomelabs.com
+CONVEX_SELF_HOSTED_URL=https://convex-api--main--<workspace>--<owner>.coder.hahomelabs.com
 CONVEX_SELF_HOSTED_ADMIN_KEY=<your-admin-key>
 ```
 
