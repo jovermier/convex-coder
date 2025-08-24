@@ -68,6 +68,7 @@ admin_key.txt
 .parcel-cache/
 .next/
 .nuxt/
+tmp/
 
 # Coverage
 coverage/

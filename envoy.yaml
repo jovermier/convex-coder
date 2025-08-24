@@ -1,0 +1,79 @@
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        protocol: TCP
+        address: 0.0.0.0
+        port_value: 9000
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+          http_filters:
+          # Strip server-side encryption headers before AWS signing
+          - name: envoy.filters.http.lua
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+              inline_code: |
+                function envoy_on_request(request_handle)
+                  -- Log headers for debugging
+                  for key, value in pairs(request_handle:headers()) do
+                    if string.find(string.lower(key), "amz") then
+                      request_handle:logInfo("Header: " .. key .. " = " .. value)
+                    end
+                  end
+                  
+                  -- Remove problematic server-side encryption headers
+                  request_handle:headers():remove("x-amz-server-side-encryption")
+                  request_handle:headers():remove("x-amz-server-side-encryption-aws-kms-key-id")
+                  request_handle:headers():remove("x-amz-server-side-encryption-context")
+                  request_handle:headers():remove("x-amz-server-side-encryption-customer-algorithm")
+                  request_handle:headers():remove("x-amz-server-side-encryption-customer-key")
+                  request_handle:headers():remove("x-amz-server-side-encryption-customer-key-md5")
+                end
+          # Note: Removed AWS signing filter - let Convex handle signing directly
+          # Router filter (required)
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: minio_local
+                  timeout: 60s
+
+  clusters:
+  - name: minio_local
+    connect_timeout: 30s
+    type: STRICT_DNS
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: minio_local
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: minio
+                port_value: 9000
+
+admin:
+  address:
+    socket_address:
+      protocol: TCP
+      address: 0.0.0.0
+      port_value: 9901

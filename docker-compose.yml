@@ -1,6 +1,8 @@
+name: convex-coder
+
 services:
   backend:
-    image: ghcr.io/get-convex/convex-backend:33cef775a8a6228cbacee4a09ac2c4073d62ed13
+    image: convex-backend-s3-compatible:latest
     stop_grace_period: 10s
     stop_signal: SIGINT
     ports:
@@ -8,9 +10,8 @@ services:
       - "${SITE_PROXY_PORT:-3211}:3211"
     volumes:
       - data:/convex/data
-      - ./convex:/app
     env_file:
-      - .env
+      - .env.docker
     environment:
       - INSTANCE_NAME=${INSTANCE_NAME:-}
       - INSTANCE_SECRET=${INSTANCE_SECRET:-}
@@ -31,22 +32,19 @@ services:
       - CONVEX_TRACE_FILE=${CONVEX_TRACE_FILE:-}
       - CONVEX_SITE=${CONVEX_SITE:-}
       - ISOLATE_V8_FLAGS=${ISOLATE_V8_FLAGS:-}
-      - AWS_REGION=${AWS_REGION:-}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
-      - AWS_S3_FORCE_PATH_STYLE=${AWS_S3_FORCE_PATH_STYLE:-}
-      - S3_STORAGE_EXPORTS_BUCKET=${S3_STORAGE_EXPORTS_BUCKET:-}
-      - S3_STORAGE_SNAPSHOT_IMPORTS_BUCKET=${S3_STORAGE_SNAPSHOT_IMPORTS_BUCKET:-}
-      - S3_STORAGE_MODULES_BUCKET=${S3_STORAGE_MODULES_BUCKET:-}
-      - S3_STORAGE_FILES_BUCKET=${S3_STORAGE_FILES_BUCKET:-}
-      - S3_STORAGE_SEARCH_BUCKET=${S3_STORAGE_SEARCH_BUCKET:-}
-      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
-      - CONVEX_FUNCTIONS_DIR=/app
+      - CONVEX_DEPLOY_KEY=${CONVEX_DEPLOY_KEY:-}
+      - AWS_S3_USE_PATH_STYLE_ACCESS=${AWS_S3_USE_PATH_STYLE_ACCESS:-}
+      - AWS_S3_DISABLE_SSL=${AWS_S3_DISABLE_SSL:-}
+      - S3_USE_ACCELERATE=${S3_USE_ACCELERATE:-}
+    depends_on:
+      minio:
+        condition: service_healthy
     healthcheck:
-      test: curl -f http://localhost:3210/version
-      interval: 5s
-      start_period: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:3210/version"]
+      interval: 3s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   dashboard:
     image: ghcr.io/get-convex/convex-dashboard:33cef775a8a6228cbacee4a09ac2c4073d62ed13
@@ -54,8 +52,10 @@ services:
     stop_signal: SIGINT
     ports:
       - "${DASHBOARD_PORT:-6791}:6791"
+    env_file:
+      - .env.docker
     environment:
-      - PORT=6791
+      - PORT=${DASHBOARD_PORT:-6791}
       - NEXT_PUBLIC_DEPLOYMENT_URL=${NEXT_PUBLIC_DEPLOYMENT_URL}
       - NEXT_PUBLIC_ADMIN_KEY=${NEXT_PUBLIC_ADMIN_KEY:-}
       - NEXT_PUBLIC_HIDE_HEADER=${NEXT_PUBLIC_HIDE_HEADER:-}
@@ -64,5 +64,27 @@ services:
       backend:
         condition: service_healthy
 
+  # MinIO S3-compatible gateway
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server --console-address ":9001" --compat /data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+      - MINIO_OPTS=--compat
+      - MINIO_KMS_AUTO_ENCRYPTION=off
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 volumes:
   data:
+  minio_data:

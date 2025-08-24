@@ -429,9 +429,44 @@ ERROR: Failed to create multipart upload: service error: unhandled error (Invali
 
 **Conclusion**: The Rook Ceph S3 integration works at the infrastructure level but fails at the application level due to Convex's universal use of multipart uploads conflicting with Rook Ceph RGW's API implementation. This is a fundamental architectural incompatibility that cannot be resolved through configuration changes or workarounds.
 
-## Hybrid Approach Options 💡
+## Current Solution Options 💡
 
-After confirming complete S3 incompatibility, several hybrid approaches could provide benefits while maintaining working local storage:
+### **🥇 Immediate Workaround: MinIO Gateway with Rook Ceph**
+
+**Updated Status (August 2025)**: Direct Ceph RGW testing confirmed the root cause and upstream fix:
+
+#### MinIO as S3-Compatible Gateway
+- **Concept**: Use MinIO as proxy between Convex and Rook Ceph storage
+- **Implementation**: 
+  ```yaml
+  services:
+    minio:
+      image: minio/minio:latest
+      environment:
+        - MINIO_ROOT_USER=minioadmin
+        - MINIO_ROOT_PASSWORD=minioadmin123
+        # Configure remote tier to Rook Ceph
+        - MINIO_TRANSITION_TIER=CEPH
+    backend:
+      environment:
+        - S3_ENDPOINT_URL=http://minio:9000
+        - S3_STORAGE_FILES_BUCKET=convex-files
+  ```
+- **Benefits**:
+  - ✅ **Immediate compatibility**: MinIO provides CRC32 checksums Convex expects
+  - ✅ **Workspace integration**: Data stored in Rook Ceph via remote tier configuration
+  - ✅ **No application changes**: Convex sees standard S3 API
+  - ✅ **Proven solution**: MinIO widely used as S3 compatibility layer
+
+#### **Root Cause Confirmed** (August 24, 2025)
+- **Direct RGW Test**: Connected Convex directly to Ceph RGW (`http://10.0.60.5`) bypassing Istio
+- **Result**: Identical "Object part missing hash! Expected crc32" error  
+- **Conclusion**: Issue is with **Ceph RGW version (Squid)**, not Istio or Rook layers
+- **Upstream Fix**: **Ceph PR #61878** (https://github.com/ceph/ceph/pull/61878) implements CRC32, CRC32C, CRC64NVME support (merged March 31, 2025)
+
+### **🥈 Alternative Approaches**
+
+After confirming complete direct S3 incompatibility, several hybrid approaches could provide benefits while maintaining working local storage:
 
 ### **🥇 High Feasibility - Immediate Implementation**
 
@@ -542,7 +577,9 @@ After confirming complete S3 incompatibility, several hybrid approaches could pr
 | Smart Backup | 🔴 High | 🟢 Low | 🔴 High |
 | Custom Upload | 🔴 High | 🟢 Low | 🔴 High |
 
-**Recommended Starting Point**: **Background S3 Sync** provides immediate workspace S3 integration benefits with minimal risk and complexity while maintaining the working local storage setup.
+**Recommended Starting Point**: 
+1. **MinIO Gateway** (NEW - January 2025) - Immediate S3 compatibility with workspace Rook Ceph integration
+2. **Background S3 Sync** - Alternative approach providing workspace S3 integration with minimal risk
 
 ## Update: August 24, 2025 - MinIO Bridge Comprehensive Testing ❌
 

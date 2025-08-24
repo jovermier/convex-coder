@@ -11,7 +11,7 @@ A full-stack application with Convex backend optimized for deployment in Coder w
 - **Automatic environment setup** with `generate-env.js`
 - **Convex Dashboard** for monitoring and debugging
 - **Automatic integration** with Coder workspace PostgreSQL database
-- **Local file storage** (S3 disabled due to DNS resolution issues)
+- **Local file storage by default** (S3 optional, with encryption compatibility fixes)
 
 ## Architecture
 
@@ -37,23 +37,21 @@ Use the automated setup script to configure environment files and start Docker c
 ```bash
 # Automatically setup environment and start services  
 npm run generate-env
-
-# OR manually copy templates if needed
-cp .env.local.example .env.local
-cp .env.docker.example .env.docker
 ```
+
+This command will:
+- Generate secure credentials and admin keys
+- Configure environment files for your workspace
+- Retrieve admin key from running Docker containers automatically
 
 ### 3. Start the Backend Services
 
 ```bash
 # Start the self-hosted Convex backend (uses workspace PostgreSQL)
 pnpm run docker:up
-
-# Generate admin key (first time only)
-pnpm run docker:generate-admin-key
-
-# Update .env.local with the admin key from above
 ```
+
+The admin key is automatically generated and configured by `generate-env.js`.
 
 ### 4. Deploy Convex Functions
 
@@ -89,16 +87,17 @@ For local development:
 When running in a Coder workspace, this application automatically:
 
 1. **Uses workspace PostgreSQL** for the Convex backend database
-2. **Uses local Docker volumes** for file storage (S3 disabled due to DNS issues)
+2. **Uses local file storage by default** for reliability (S3 optional with MinIO gateway)
 3. **Configures environment variables** from workspace settings
 4. **Sets up Docker networking** for service communication
+5. **Generates secure admin keys** from running backend containers
 
 ### Environment Variables
 
 The following environment variables are automatically configured from your Coder workspace:
 
 - `PGURI`: PostgreSQL connection string
-- `S3_*` variables: Currently disabled due to DNS resolution issues in Docker containers
+- `S3_*` variables: Optional, commented out by default (uncomment in `.env.docker.example` to enable MinIO S3 gateway)
 
 ## Development Commands
 
@@ -114,7 +113,7 @@ pnpm build              # Build for production
 pnpm run docker:up      # Start self-hosted backend
 pnpm run docker:down    # Stop backend containers
 pnpm run docker:logs    # View backend logs
-pnpm run docker:generate-admin-key  # Get admin key for dashboard
+pnpm run docker:generate-admin-key  # Get admin key manually (if needed)
 
 # Self-hosted Convex development (Coder workspace)
 pnpm dev:backend:self-hosted  # Watch and regenerate types for self-hosted
@@ -191,9 +190,8 @@ TypeError: Cannot read properties of undefined (reading 'length')
 3. Reset the backend if previously initialized with S3:
    ```bash
    docker-compose down -v
+   npm run generate-env  # This will regenerate environment and get admin key
    docker-compose --env-file .env.docker up -d
-   pnpm run docker:generate-admin-key
-   # Update .env.local with new admin key
    npx convex dev --once
    ```
 
@@ -203,21 +201,29 @@ If you see an error about database being initialized with S3 but backend started
 
 **Solution:**
 1. Stop and remove all containers and volumes: `docker-compose down -v`
-2. Start fresh: `docker-compose --env-file .env.docker up -d`
-3. Generate new admin key and update `.env.local`
+2. Regenerate environment: `npm run generate-env` (this gets the admin key automatically)
+3. Start fresh: `docker-compose --env-file .env.docker up -d`
 4. Deploy functions again: `npx convex dev --once`
 
 ### Database connection errors
 - Verify PostgreSQL credentials: `psql $PGURI -c 'SELECT 1'`
 - Check `.env.docker` has correct `DATABASE_URL` and `POSTGRES_URL`
 
-### S3 DNS Resolution Issues
+### File Upload Issues (500 Internal Server Error)
 
-**Known Issue:** Docker containers cannot resolve internal Coder workspace S3 endpoints.
+If you see "Server side encryption specified but KMS is not configured" errors:
 
-**Current Workaround:** S3 is disabled. Files are stored locally in Docker volumes instead.
+**Solution 1 - Use Local Storage (Default)**:
+- Ensure S3 configuration is commented out in `.env.docker`
+- Restart backend: `docker compose restart backend`
 
-For detailed documentation about these issues and workarounds, see: `docs/CONVEX_SELF_HOSTED_ISSUE.md`
+**Solution 2 - Enable S3 Storage with MinIO**:
+1. Uncomment S3 configuration in `.env.docker.example`
+2. Regenerate environment: `npm run generate-env`
+3. Restart services: `npm run docker:up`
+4. Set up MinIO buckets: `bash setup-minio.sh`
+
+**Note**: Local storage is recommended for development as it's more reliable and avoids S3 encryption compatibility issues.
 
 ## Deployment Notes
 

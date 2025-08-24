@@ -145,9 +145,12 @@ NEXT_PUBLIC_DEPLOYMENT_URL="https://convex-api--main--<workspace>--<owner>.coder
 
 ### File Uploads
 
-- Currently configured for local storage (S3 compatibility resolved)
-- Upload functionality available through dashboard
-- Storage location: Docker volume `data:/convex/data`
+- **Current Configuration**: Local storage (AWS SDK compatibility issues with Rook Ceph)
+- **Root Cause Confirmed**: Direct Ceph RGW testing (August 2025) proved issue is with Ceph version, not Istio/Rook
+- **Upstream Fix**: Ceph PR #61878 (https://github.com/ceph/ceph/pull/61878) merged March 31, 2025 - adds CRC32 support
+- **Temporary S3 Solution**: MinIO gateway with Rook Ceph remote tier 
+- **Upload Functionality**: Available through dashboard
+- **Storage Location**: Docker volume `data:/convex/data` (local) or workspace S3 (via MinIO)
 
 ### Troubleshooting Common Issues
 

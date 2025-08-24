@@ -10,7 +10,11 @@ The simplest way to run Convex self-hosted is using the official Docker images (
 
 - **Database Connection:** By default the self-hosted Convex uses an embedded SQLite, but you can plug in external databases. Since you have Postgres running in the workspace, set the `DATABASE_URL` (or the specific `POSTGRES_URL`) environment variable to your Postgres connection string[stack.convex.dev](https://stack.convex.dev/self-hosted-develop-and-deploy#:~:text=,tech). This tells Convex to use Postgres for storage. Ensure the database exists (the Convex README suggests a DB named “convex_self_hosted” by default) – otherwise create one before launching[stack.convex.dev](https://stack.convex.dev/self-hosted-develop-and-deploy#:~:text=Just%20make%20sure%20there%E2%80%99s%20a,See%20the%20docs). Once `DATABASE_URL` is set, the Convex container will handle migrations automatically on startup.
 
-- **File Storage (S3) Configuration:** Convex’s file storage feature uses S3-compatible blob storage under the hood. In self-hosting, you need to provide your own S3 bucket or else Convex will default to storing files on local disk (under `/convex/data/storage/files`). To mimic the cloud experience (durable file storage), **configure S3 in the Convex backend’s env**. This means setting AWS credentials and bucket names:
+- **File Storage (S3) Configuration:** Convex's file storage feature uses S3-compatible blob storage under the hood. In self-hosting, you need to provide your own S3 bucket or else Convex will default to storing files on local disk (under `/convex/data/storage/files`).
+
+  **⚠️ AWS SDK Compatibility Note (August 2025)**: Recent AWS SDK changes require CRC32 checksum support that many S3-compatible services don't provide. **Direct Ceph RGW testing confirmed** this affects Ceph Squid version. **Upstream fix available**: Ceph PR #61878 (https://github.com/ceph/ceph/pull/61878) merged March 31, 2025 with full CRC32/CRC32C/CRC64NVME support. For current environments, consider using **MinIO as a gateway** to your storage backend.
+
+  To configure S3 storage, **set AWS credentials and bucket names in the Convex backend's env**:
   - `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (and `AWS_SESSION_TOKEN` if needed) for your storage.
 
   - `AWS_S3_FORCE_PATH_STYLE=true` if you’re using a Ceph or other S3-compatible service that requires path-style requests.
