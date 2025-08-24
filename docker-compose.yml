@@ -2,7 +2,7 @@ name: convex-coder
 
 services:
   backend:
-    image: convex-backend-s3-compatible:latest
+    image: harbor.hahomelabs.com/mycritters/convex-backend:latest
     stop_grace_period: 10s
     stop_signal: SIGINT
     ports:
