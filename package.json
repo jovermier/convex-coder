@@ -17,7 +17,7 @@
     "dev:backend": "pnpm docker:up",
     "dev:backend:self-hosted": "node dev-backend.js",
     "deploy:self-hosted": "node deploy-to-self-hosted.js",
-    "setup-env": "node setup-env.js",
+    "setup:env": "node setup-env.js",
     "sync-admin-key": "node sync-admin-key.js",
     "admin-key-status": "node sync-admin-key.js --status",
     "setup-minio": "bash setup-minio.sh",
