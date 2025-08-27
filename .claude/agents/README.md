@@ -4,21 +4,40 @@ A comprehensive autonomous agent system designed for building full-stack applica
 
 ## Overview
 
-This is an advanced autonomous agent system that coordinates multiple specialist agents to deliver complete full-stack features with comprehensive validation, autonomous retry mechanisms, and self-healing capabilities.
+This is an advanced autonomous agent system that coordinates 9 specialist agents to deliver complete full-stack features with comprehensive validation, autonomous retry mechanisms, and self-healing capabilities. The system uses sequential execution patterns to prevent memory issues while maintaining high performance.
 
 ## Agent Architecture
 
 ```
+┌─────────────────────────────────────────────────┐
+│              ORCHESTRATOR                       │
+│         (Coordination & Delegation)              │
+└─────────────────┬───────────────────────────────┘
+                  │
+    ┌─────────────┼─────────────┬──────────────┐
+    │             │             │              │
+┌───▼────┐  ┌────▼────┐  ┌────▼────┐  ┌──────▼──────┐
+│Database│  │Frontend │  │Testing  │  │Operations   │
+│Backend │  │   UI    │  │Quality  │  │Performance  │
+└───┬────┘  └────┬────┘  └────┬────┘  └──────┬──────┘
+    │            │            │              │
+    ├─ Schema    ├─ React     ├─ Integration │
+    ├─ Migration ├─ Auth      └─ Visual A11y └─ Performance
+    └─ Functions                                DevOps
+```
+
+```
 .claude/agents/
-├── orchestrator.md                 # Autonomous coordination and validation loops
-├── convex-schema-manager.md        # Database schema management
-├── convex-function-generator.md    # Query/mutation/action generation  
-├── react-convex-builder.md         # React component creation
-├── convex-auth-specialist.md       # Authentication & authorization
-├── fullstack-feature-creator.md    # End-to-end feature development
-├── web-testing-specialist.md       # Comprehensive testing and validation
-├── performance-engineer.md         # Performance optimization and monitoring
-└── README.md                       # This documentation
+├── orchestrator.md                         # Coordination and delegation
+├── convex-schema-manager.md                # Database schema management
+├── convex-data-migration-specialist.md     # Data migrations & transformations
+├── convex-function-generator.md            # Query/mutation/action generation  
+├── react-convex-builder.md                 # React component creation
+├── convex-auth-specialist.md               # Authentication & authorization
+├── integration-testing-specialist.md       # Unit, integration, E2E testing
+├── visual-accessibility-specialist.md      # Visual regression & accessibility
+├── performance-engineer.md                 # Performance optimization & DevOps
+└── README.md                               # This documentation
 ```
 
 ## Autonomous Commands
@@ -120,23 +139,32 @@ This is an advanced autonomous agent system that coordinates multiple specialist
 - Compliance with privacy regulations (GDPR, CCPA)
 - Security vulnerability detection and patching
 
-### 🏗️ **Full-Stack Feature Creator**
-**End-to-end feature coordination specialist**
+### 🔄 **Convex Data Migration Specialist**
+**Schema evolution and data transformation specialist**
 
-- Complete feature implementation across all layers
-- Type safety enforcement from schema to UI
-- Real-time data synchronization patterns
-- Performance budget enforcement
-- Comprehensive testing and validation
+- Zero-downtime schema migrations
+- Data backfill operations
+- Progressive migration strategies
+- Blue-green deployments
+- Data integrity validation
 
-### 🧪 **Web Testing Specialist**
-**Comprehensive quality assurance specialist**
+### 🧪 **Integration Testing Specialist**
+**Functional testing and validation specialist**
 
-- Multi-layer testing (unit, integration, e2e, performance)
-- Autonomous issue detection and classification
-- Fix generation and validation
-- Regression prevention and monitoring
-- Accessibility and security compliance testing
+- Unit testing for components and functions
+- Integration testing for cross-layer compatibility
+- End-to-end testing for user workflows
+- Test coverage enforcement (>80%)
+- Autonomous issue detection and fixing
+
+### 🎨 **Visual Accessibility Specialist**
+**UI consistency and accessibility specialist**
+
+- Visual regression testing (<0.1% pixel difference)
+- WCAG 2.1 AA compliance verification
+- Cross-browser compatibility testing
+- Responsive design validation
+- Accessibility issue auto-fixing
 
 ### ⚡ **Performance Engineer**
 **Full-stack performance optimization specialist**
@@ -146,6 +174,31 @@ This is an advanced autonomous agent system that coordinates multiple specialist
 - Real-time performance monitoring
 - Memory leak detection and resolution
 - CDN and caching optimization
+
+## Memory Management Guidelines
+
+### Sequential Execution Pattern (CRITICAL)
+To prevent JavaScript heap memory crashes, all agent Task calls MUST be sequential:
+
+```typescript
+// ✅ CORRECT - Sequential execution prevents memory issues
+const schemaResult = await Task({ subagent_type: "Convex Schema Manager", ... });
+const functionResult = await Task({ subagent_type: "Convex Function Generator", ... });
+const componentResult = await Task({ subagent_type: "React Convex Builder", ... });
+
+// ❌ WRONG - Parallel execution causes heap overflow
+const [schema, functions, components] = await Promise.all([
+  Task({ subagent_type: "Convex Schema Manager", ... }),
+  Task({ subagent_type: "Convex Function Generator", ... }),
+  Task({ subagent_type: "React Convex Builder", ... })
+]);
+```
+
+### Maximum Concurrent Operations
+- **Tool Calls**: Maximum 2 concurrent per message
+- **Agent Tasks**: Always sequential (no Promise.all)
+- **File Operations**: Process in small batches
+- **Test Execution**: Run test suites sequentially
 
 ## Autonomous Workflows
 
@@ -228,6 +281,22 @@ Commands automatically retry with intelligent issue resolution:
 - **Authorization**: Role-based access control with fine-grained permissions
 - **Data Protection**: GDPR compliance with automatic privacy controls
 - **Security Monitoring**: Real-time vulnerability detection and patching
+
+## Task Delegation Matrix
+
+| Task Type | Primary Agent | Supporting Agents |
+|-----------|--------------|-------------------|
+| New Feature | Orchestrator | All relevant specialists |
+| Schema Change | Schema Manager | Data Migration Specialist |
+| Data Migration | Data Migration Specialist | Schema Manager |
+| API Development | Function Generator | Schema Manager |
+| UI Component | React Builder | Visual A11y Specialist |
+| Authentication | Auth Specialist | Function Generator |
+| Unit Testing | Integration Testing | - |
+| Visual Testing | Visual A11y Specialist | - |
+| Performance | Performance Engineer | - |
+| Accessibility | Visual A11y Specialist | React Builder |
+| Deployment | Performance Engineer | Integration Testing |
 
 ## Integration with Development Workflow
 

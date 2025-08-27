@@ -79,3 +79,20 @@ pids/
 *.pid
 *.seed
 *.pid.lock
+
+# Playwright & Test Results
+test-results/
+test-results-*/
+playwright-report/
+playwright/.cache/
+/tests/test-results/
+/tests/playwright-report/
+
+# Playwright artifacts (videos, traces, screenshots)
+*.webm
+*.zip
+test-artifacts/
+
+# Test output directories
+/html-report/
+/junit.xml

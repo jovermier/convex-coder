@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:analyze": "tsc && vite build --mode analyze",
     "dev:backend": "pnpm docker:up",
     "dev:backend:self-hosted": "node dev-backend.js",
     "deploy:self-hosted": "node deploy-to-self-hosted.js",
@@ -34,6 +35,15 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "pnpm exec playwright test",
+    "test:e2e:ui": "pnpm exec playwright test --ui --ui-host=0.0.0.0 --ui-port=9323",
+    "test:e2e:report": "pnpm exec playwright show-report --host=0.0.0.0 --port=9325",
+    "test:e2e:debug": "pnpm exec playwright test --debug",
+    "test:e2e:install": "pnpm exec playwright install",
+    "test:e2e:capture": "pnpm exec playwright test tests/e2e/enhanced-capture-demo.spec.ts",
+    "test:e2e:mobile": "INCLUDE_MOBILE=1 pnpm exec playwright test",
+    "test:e2e:headed": "pnpm exec playwright test --headed",
+    "test:e2e:trace": "pnpm exec playwright test --trace=on",
     "check": "npm run typecheck && npm run lint && npm run test:run",
     "context:prune": "node scripts/context-pruner.js prune",
     "context:prune-all": "node scripts/context-pruner.js prune",
@@ -69,6 +79,7 @@
   "devDependencies": {
     "@eslint/css": "0.10.0",
     "@eslint/js": "9.34.0",
+    "@playwright/test": "1.55.0",
     "@testing-library/jest-dom": "6.8.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
@@ -93,6 +104,8 @@
     "typescript": "5.9.2",
     "typescript-eslint": "8.40.0",
     "vite": "7.1.3",
-    "vitest": "3.2.4"
+    "vite-bundle-analyzer": "^1.2.1",
+    "vitest": "3.2.4",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

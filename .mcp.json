@@ -21,14 +21,6 @@
         "MCP_SERVER_NAME": "context7"
       }
     },
-    "serena": {
-      "command": "npx",
-      "args": ["@cyanheads/git-mcp-server"],
-      "env": {
-        "MCP_SERVER_NAME": "serena",
-        "GIT_REPOSITORY_PATH": "/home/coder/repo"
-      }
-    },
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp"],

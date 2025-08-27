@@ -23,7 +23,7 @@ async function autonomousPerformanceLoop(targets: PerformanceTarget[]): Promise<
     // Phase 1: Capture Performance Baseline
     const baseline = await capturePerformanceBaseline();
     
-    // Phase 2: Multi-Layer Performance Analysis
+    // Phase 2: Multi-Layer Performance Analysis (Parallel Execution)
     const analysisResults = await Promise.all([
       analyzeDatabasePerformance(),
       analyzeFunctionPerformance(),
@@ -342,22 +342,31 @@ interface FunctionPerformanceConfig {
 }
 
 const functionOptimizer = {
-  // Analyze function performance
+  // Analyze function performance (Parallel Batch Processing)
   analyzeFunctionPerformance: async () => {
     const functions = await getAllConvexFunctions();
+    
+    // Process functions in parallel batches for better performance
+    const BATCH_SIZE = 5;
     const performanceData = [];
     
-    for (const func of functions) {
-      const metrics = await measureFunctionPerformance(func);
-      performanceData.push({
-        function: func.name,
-        type: func.type, // query, mutation, action
-        avgResponseTime: metrics.averageResponseTime,
-        memoryUsage: metrics.memoryUsage,
-        cpuUsage: metrics.cpuUsage,
-        errorRate: metrics.errorRate,
-        throughput: metrics.requestsPerSecond
-      });
+    for (let i = 0; i < functions.length; i += BATCH_SIZE) {
+      const batch = functions.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (func) => {
+          const metrics = await measureFunctionPerformance(func);
+          return {
+            function: func.name,
+            type: func.type, // query, mutation, action
+            avgResponseTime: metrics.averageResponseTime,
+            memoryUsage: metrics.memoryUsage,
+            cpuUsage: metrics.cpuUsage,
+            errorRate: metrics.errorRate,
+            throughput: metrics.requestsPerSecond
+          };
+        })
+      );
+      performanceData.push(...batchResults);
     }
     
     return performanceData;

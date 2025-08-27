@@ -55,7 +55,7 @@ function transformConvexMessage(msg: ConvexMessage) {
 export function useConvexMessages() {
   // Use Convex's real-time query with the working function name
   // IMPORTANT: Never call setState during render - let ErrorBoundary handle errors
-  const messages = useQuery(api.chat.getMessages) as
+  const messages = useQuery(api.chat.getMessages, {}) as
     | ConvexMessage[]
     | undefined;
 
