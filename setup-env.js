@@ -209,14 +209,14 @@ function setupDockerEnv() {
 
   // Database configuration - Use workspace PostgreSQL if available
   if (process.env.PGURI) {
-    // Remove database name from URL as Convex manages it separately
+    // Keep database name in URL as Convex backend requires it
     const pgUrl = new URL(process.env.PGURI);
-    pgUrl.pathname = ""; // Remove the /app from the path
+    // Ensure database name matches INSTANCE_NAME
+    pgUrl.pathname = "/app";
 
-    const cleanPostgresUrl = pgUrl.toString();
+    const postgresUrlWithDb = pgUrl.toString();
 
-    updates.DATABASE_URL = cleanPostgresUrl;
-    updates.POSTGRES_URL = cleanPostgresUrl;
+    updates.POSTGRES_URL = postgresUrlWithDb;
 
     // Extract PostgreSQL server SSL certificate for PG_CA_FILE
     const { execSync } = require("child_process");

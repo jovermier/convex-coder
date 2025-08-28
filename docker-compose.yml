@@ -2,7 +2,7 @@ name: convex-coder
 
 services:
   backend:
-    image: harbor.hahomelabs.com/mycritters/convex-backend:latest
+    image: harbor.hahomelabs.com/convex/convex-backend:latest
     stop_grace_period: 10s
     stop_signal: SIGINT
     ports:
@@ -10,7 +10,7 @@ services:
       - "${SITE_PROXY_PORT:-3211}:3211"
     volumes:
       - data:/convex/data
-      - ./postgres_ca_chain.pem:/tmp/postgres_ca_chain.pem:ro
+      - /tmp/postgres_ca_chain.pem:/tmp/postgres_ca_chain.pem:ro
     env_file:
       - .env.docker
     environment:
@@ -20,8 +20,7 @@ services:
       - ACTIONS_USER_TIMEOUT_SECS=${ACTIONS_USER_TIMEOUT_SECS:-}
       - CONVEX_CLOUD_ORIGIN=${CONVEX_CLOUD_ORIGIN}
       - CONVEX_SITE_ORIGIN=${CONVEX_SITE_ORIGIN}
-      - DATABASE_URL=${DATABASE_URL:-}
-      - DISABLE_BEACON=${DISABLE_BEACON:-}
+      - DISABLE_BEACON=${DISABLE_BEACON:-false}
       - REDACT_LOGS_TO_CLIENT=${REDACT_LOGS_TO_CLIENT:-}
       - DO_NOT_REQUIRE_SSL=${DO_NOT_REQUIRE_SSL:-}
       - POSTGRES_URL=${POSTGRES_URL:-}

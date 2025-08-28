@@ -207,7 +207,7 @@ If you see an error about database being initialized with S3 but backend started
 
 ### Database connection errors
 - Verify PostgreSQL credentials: `psql $PGURI -c 'SELECT 1'`
-- Check `.env.docker` has correct `DATABASE_URL` and `POSTGRES_URL`
+- Check `.env.docker` has correct `POSTGRES_URL`
 
 ### File Upload Issues (500 Internal Server Error)
 
