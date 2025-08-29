@@ -9,12 +9,19 @@ const MockConvexProvider = ({ children }: { children: React.ReactNode }) => {
   return <div data-testid="mock-convex-provider">{children}</div>;
 };
 
+// Mock AuthProvider for tests
+const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  return <div data-testid="mock-auth-provider">{children}</div>;
+};
+
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <MockConvexProvider>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        {children}
-      </ThemeProvider>
+      <MockAuthProvider>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          {children}
+        </ThemeProvider>
+      </MockAuthProvider>
     </MockConvexProvider>
   );
 };

@@ -3,13 +3,16 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    name: v.string(),
+    name: v.optional(v.string()),
     email: v.optional(v.string()),
+    passwordHash: v.optional(v.string()),
     avatar: v.optional(v.string()),
     isOnline: v.optional(v.boolean()),
     lastSeen: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_email", ["email"]),
+  })
+    .index("by_email", ["email"])
+    .index("by_created_at", ["createdAt"]),
 
   messages: defineTable({
     senderId: v.id("users"),

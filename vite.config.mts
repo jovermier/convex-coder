@@ -7,7 +7,13 @@ import { analyzer } from "vite-bundle-analyzer";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
-    react(), 
+    react({
+      babel: {
+        plugins: [
+          ["babel-plugin-react-compiler"]
+        ],
+      },
+    }), 
     tailwindcss(),
     ...(mode === "analyze" ? [analyzer({ 
       analyzerMode: 'server',

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -33,7 +33,7 @@ export function usePerformanceMonitoring(componentName?: string) {
 
   // Measure memory usage (if available)
   const measureMemoryUsage = useCallback(() => {
-    if ('memory' in performance && (performance as any).memory) {
+    if ("memory" in performance && (performance as any).memory) {
       return (performance as any).memory.usedJSHeapSize;
     }
     return undefined;
@@ -45,7 +45,7 @@ export function usePerformanceMonitoring(componentName?: string) {
     const deltaTime = now - lastFrameTime.current;
     lastFrameTime.current = now;
     frameCount.current++;
-    
+
     // Calculate FPS over the last second
     if (frameCount.current % 60 === 0) {
       return 1000 / deltaTime;
@@ -54,45 +54,50 @@ export function usePerformanceMonitoring(componentName?: string) {
   }, []);
 
   // Record performance entry
-  const recordMetric = useCallback((action?: string) => {
-    const entry: PerformanceEntry = {
-      timestamp: Date.now(),
-      component: componentName,
-      action,
-      metrics: {
-        renderTime: measureRenderTime(),
-        memoryUsage: measureMemoryUsage(),
-        bundleLoadTime: performance.now(), // Time since page load
-        interactionLatency: 0, // Will be measured separately
-        frameRate: measureFrameRate(),
-      }
-    };
+  const recordMetric = useCallback(
+    (action?: string) => {
+      const entry: PerformanceEntry = {
+        timestamp: Date.now(),
+        component: componentName,
+        action,
+        metrics: {
+          renderTime: measureRenderTime(),
+          memoryUsage: measureMemoryUsage(),
+          bundleLoadTime: performance.now(), // Time since page load
+          interactionLatency: 0, // Will be measured separately
+          frameRate: measureFrameRate(),
+        },
+      };
 
-    setMetrics(prev => [...prev.slice(-50), entry]); // Keep last 50 entries
-    
-    // Log performance warnings
-    if (entry.metrics.renderTime > 16) {
-      console.warn(`Slow render detected in ${componentName}: ${entry.metrics.renderTime}ms`);
-    }
-    
-    return entry;
-  }, [componentName, measureRenderTime, measureMemoryUsage, measureFrameRate]);
+      setMetrics((prev) => [...prev.slice(-50), entry]); // Keep last 50 entries
+
+      // Log performance warnings
+      if (entry.metrics.renderTime > 16) {
+        console.warn(
+          `Slow render detected in ${componentName}: ${entry.metrics.renderTime}ms`
+        );
+      }
+
+      return entry;
+    },
+    [componentName, measureRenderTime, measureMemoryUsage, measureFrameRate]
+  );
 
   // Measure interaction latency
   const measureInteractionLatency = useCallback((startTime: number) => {
     const latency = performance.now() - startTime;
-    setMetrics(prev => {
+    setMetrics((prev) => {
       const latest = prev[prev.length - 1];
       if (latest) {
         latest.metrics.interactionLatency = latency;
       }
       return [...prev];
     });
-    
+
     if (latency > 100) {
       console.warn(`High interaction latency: ${latency}ms`);
     }
-    
+
     return latency;
   }, []);
 
@@ -101,37 +106,44 @@ export function usePerformanceMonitoring(componentName?: string) {
     if (metrics.length === 0) return null;
 
     const recent = metrics.slice(-10);
-    const avgRenderTime = recent.reduce((sum, m) => sum + m.metrics.renderTime, 0) / recent.length;
-    const avgFrameRate = recent.reduce((sum, m) => sum + m.metrics.frameRate, 0) / recent.length;
-    const maxMemory = Math.max(...recent.map(m => m.metrics.memoryUsage || 0));
+    const avgRenderTime =
+      recent.reduce((sum, m) => sum + m.metrics.renderTime, 0) / recent.length;
+    const avgFrameRate =
+      recent.reduce((sum, m) => sum + m.metrics.frameRate, 0) / recent.length;
+    const maxMemory = Math.max(
+      ...recent.map((m) => m.metrics.memoryUsage || 0)
+    );
 
     return {
       averageRenderTime: avgRenderTime,
       averageFrameRate: avgFrameRate,
       maxMemoryUsage: maxMemory,
       totalEntries: metrics.length,
-      performanceGrade: getPerformanceGrade(avgRenderTime, avgFrameRate)
+      performanceGrade: getPerformanceGrade(avgRenderTime, avgFrameRate),
     };
   }, [metrics]);
 
   // Performance grade calculation
-  const getPerformanceGrade = (renderTime: number, frameRate: number): 'A' | 'B' | 'C' | 'D' | 'F' => {
-    if (renderTime < 8 && frameRate > 55) return 'A';
-    if (renderTime < 16 && frameRate > 45) return 'B';
-    if (renderTime < 32 && frameRate > 30) return 'C';
-    if (renderTime < 64 && frameRate > 15) return 'D';
-    return 'F';
+  const getPerformanceGrade = (
+    renderTime: number,
+    frameRate: number
+  ): "A" | "B" | "C" | "D" | "F" => {
+    if (renderTime < 8 && frameRate > 55) return "A";
+    if (renderTime < 16 && frameRate > 45) return "B";
+    if (renderTime < 32 && frameRate > 30) return "C";
+    if (renderTime < 64 && frameRate > 15) return "D";
+    return "F";
   };
 
   // Auto-record on mount and significant re-renders
   useEffect(() => {
-    recordMetric('mount');
+    recordMetric("mount");
   }, [recordMetric]);
 
   // Monitor for performance issues
   useEffect(() => {
     const interval = setInterval(() => {
-      recordMetric('periodic');
+      recordMetric("periodic");
     }, 5000);
 
     return () => clearInterval(interval);
@@ -142,7 +154,7 @@ export function usePerformanceMonitoring(componentName?: string) {
     recordMetric,
     measureInteractionLatency,
     getPerformanceSummary,
-    currentPerformance: metrics[metrics.length - 1]
+    currentPerformance: metrics[metrics.length - 1],
   };
 }
 
@@ -155,23 +167,27 @@ export function createPerformanceMonitor(componentName: string) {
       const startTime = performance.now();
       const result = callback();
       const endTime = performance.now();
-      
+
       if (endTime - startTime > 100) {
-        console.warn(`Slow interaction in ${componentName}: ${endTime - startTime}ms`);
+        console.warn(
+          `Slow interaction in ${componentName}: ${endTime - startTime}ms`
+        );
       }
-      
+
       return result;
     },
     recordMetric: (metricName: string, value: number) => {
       console.log(`${componentName} - ${metricName}: ${value}ms`);
-    }
+    },
   };
 }
 
 /**
  * Hook for optimizing expensive operations
  */
-export function usePerformanceOptimizedCallback<T extends (...args: any[]) => any>(
+export function usePerformanceOptimizedCallback<
+  T extends (...args: any[]) => any,
+>(
   callback: T,
   deps: React.DependencyList,
   maxExecutionTime = 16 // One frame budget
@@ -179,6 +195,7 @@ export function usePerformanceOptimizedCallback<T extends (...args: any[]) => an
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingArgs = useRef<Parameters<T> | null>(null);
 
+  // eslint-disable-next-line react-compiler/react-compiler
   return useCallback((...args: Parameters<T>) => {
     pendingArgs.current = args;
 
@@ -214,7 +231,7 @@ export function useMemoryMonitoring() {
 
   useEffect(() => {
     const updateMemoryInfo = () => {
-      if ('memory' in performance && (performance as any).memory) {
+      if ("memory" in performance && (performance as any).memory) {
         const memory = (performance as any).memory;
         setMemoryInfo({
           used: memory.usedJSHeapSize,
@@ -230,8 +247,8 @@ export function useMemoryMonitoring() {
     return () => clearInterval(interval);
   }, []);
 
-  const memoryUsagePercentage = memoryInfo 
-    ? (memoryInfo.used / memoryInfo.limit) * 100 
+  const memoryUsagePercentage = memoryInfo
+    ? (memoryInfo.used / memoryInfo.limit) * 100
     : 0;
 
   const isMemoryWarning = memoryUsagePercentage > 70;

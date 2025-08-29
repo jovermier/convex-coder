@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 // Removed ScrollArea import to use native scrollbars
 import { User } from "@/hooks/useUser";
@@ -19,6 +19,8 @@ interface SmartChatMessagesProps {
     error: any;
     refetch: () => void;
   };
+  onDeleteMessage?: (messageId: string) => Promise<void>;
+  onAutoScroll?: () => void;
 }
 
 export function SmartChatMessages({
@@ -26,6 +28,8 @@ export function SmartChatMessages({
   mode,
   convexMessages,
   workingMessages,
+  onDeleteMessage,
+  onAutoScroll,
 }: SmartChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -49,36 +53,56 @@ export function SmartChatMessages({
     }
   }, [mode, convexMessages, workingMessages]);
 
+  // React Compiler will optimize this automatically
+  const handleDeleteMessage = async (messageId: string) => {
+    return onDeleteMessage?.(messageId);
+  };
+
+  // Track previous message count to detect changes
+  const prevMessageCountRef = useRef(0);
+
   // Scroll to bottom only AFTER loading is complete and messages are rendered
   useEffect(() => {
     // Only scroll when we have messages AND loading is complete
     if (messages.length > 0 && !isLoading) {
-      // Use timeout to ensure all content is fully rendered
-      const scrollTimer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          // Method 1: Try scrollIntoView first
-          if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({
-              behavior: "auto",
-              block: "end",
-            });
-          }
+      const currentMessageCount = messages.length;
+      const prevMessageCount = prevMessageCountRef.current;
 
-          // Method 2: Also directly scroll the container to its maximum height
-          requestAnimationFrame(() => {
-            const scrollContainer = messagesEndRef.current?.closest(
-              ".chat-messages-scroll"
-            ) as HTMLElement;
-            if (scrollContainer) {
-              scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            }
+      // Signal that auto-scroll is about to happen when:
+      // 1. Messages are added (new message received)
+      // 2. Messages are removed (message deleted)
+      // 3. Initial load
+      if (currentMessageCount !== prevMessageCount || prevMessageCount === 0) {
+        onAutoScroll?.();
+      }
+
+      prevMessageCountRef.current = currentMessageCount;
+
+      // Use requestAnimationFrame for smooth scrolling without setTimeout
+      let rafId: number;
+      rafId = requestAnimationFrame(() => {
+        // Method 1: Try scrollIntoView first
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({
+            behavior: "auto",
+            block: "end",
           });
-        });
-      }, 100); // Small delay to ensure rendering is complete
+        }
 
-      return () => clearTimeout(scrollTimer);
+        // Method 2: Also directly scroll the container to its maximum height
+        rafId = requestAnimationFrame(() => {
+          const scrollContainer = document.getElementById("messages-container");
+          if (scrollContainer) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          }
+        });
+      });
+
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+      };
     }
-  }, [messages, isLoading]); // Re-run when messages OR loading state changes
+  }, [messages, isLoading, onAutoScroll]); // Re-run when messages OR loading state changes
 
   // Group messages to determine when to show avatars
   const groupedMessages = useMemo(() => {
@@ -96,10 +120,7 @@ export function SmartChatMessages({
         prevMessage.senderId !== message.senderId ||
         message.createdAt - prevMessage.createdAt > 5 * 60 * 1000;
 
-      const isOwnMessage =
-        currentUser &&
-        (message.senderId === currentUser._id ||
-          message.senderId.includes(currentUser.name.toLowerCase()));
+      const isOwnMessage = currentUser && message.senderId === currentUser._id;
 
       return {
         ...message,
@@ -160,7 +181,7 @@ export function SmartChatMessages({
   }
 
   return (
-    <div className="chat-messages-scroll h-full flex-1 overflow-y-auto">
+    <div className="chat-messages-scroll">
       <div className="space-y-4 p-4">
         {groupedMessages.map((message) => {
           try {
@@ -170,6 +191,7 @@ export function SmartChatMessages({
                 message={message}
                 isOwnMessage={message.isOwnMessage}
                 showAvatar={message.showAvatar}
+                onDelete={handleDeleteMessage}
               />
             );
           } catch (err) {

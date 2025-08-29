@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Mock ResizeObserver which is not available in jsdom
 class MockResizeObserver {
@@ -45,3 +46,27 @@ console.warn = (...args: any[]) => {
     originalConsoleWarn(...args);
   }
 };
+
+// Mock useAuth hook
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: {
+      _id: "test-user-id",
+      name: "Test User",
+      email: "test@example.com",
+    },
+    loading: false,
+    error: null,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+  }),
+}));
+
+// Mock Convex React hooks
+vi.mock("convex/react", () => ({
+  useQuery: vi.fn(() => []),
+  useMutation: vi.fn(() => vi.fn()),
+  useAction: vi.fn(() => vi.fn()),
+  ConvexProvider: ({ children }: { children: React.ReactNode }) => children,
+}));

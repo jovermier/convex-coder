@@ -1,11 +1,17 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 
-import { Download, Paperclip } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Download, Paperclip, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useConvexFileUrl } from "@/hooks/useConvexChat";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +41,16 @@ interface MessageBubbleProps {
   message: Message;
   isOwnMessage: boolean;
   showAvatar: boolean;
+  onDelete?: (messageId: string) => Promise<void>;
 }
 
 export const MessageBubble = memo(function MessageBubble({
   message,
   isOwnMessage,
   showAvatar,
+  onDelete,
 }: MessageBubbleProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
   // Get file URL from Convex storage if storageId exists
   const fileUrl = useConvexFileUrl(message.storageId);
   const formatFileSize = (bytes: number) => {
@@ -91,6 +100,9 @@ export const MessageBubble = memo(function MessageBubble({
             </div>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] max-w-4xl p-0">
+            <VisuallyHidden>
+              <DialogTitle>Image Preview: {message.fileName}</DialogTitle>
+            </VisuallyHidden>
             <img
               src={displayUrl}
               alt={message.fileName}
@@ -184,15 +196,46 @@ export const MessageBubble = memo(function MessageBubble({
           {renderFileContent()}
         </div>
 
-        {/* Timestamp */}
-        <span
+        {/* Timestamp and actions */}
+        <div
           className={cn(
-            "text-muted-foreground px-1 text-xs opacity-0 transition-opacity group-hover:opacity-100",
-            isOwnMessage ? "text-right" : "text-left"
+            "flex items-center gap-2 px-1 transition-opacity",
+            isOwnMessage
+              ? "justify-end opacity-70 group-hover:opacity-100"
+              : "justify-start opacity-0 group-hover:opacity-100"
           )}
         >
-          {formatTime(message._creationTime || message.createdAt)}
-        </span>
+          <span className="text-muted-foreground text-xs">
+            {formatTime(message._creationTime || message.createdAt)}
+          </span>
+          {isOwnMessage && onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                setIsDeleting(true);
+                try {
+                  await onDelete(message._id);
+                } catch (error) {
+                  console.error("Failed to delete message:", error);
+                  alert("Failed to delete message. Please try again.");
+                } finally {
+                  setIsDeleting(false);
+                }
+              }}
+              disabled={isDeleting}
+              className="text-muted-foreground hover:text-destructive h-6 w-6 p-0 disabled:opacity-50"
+              aria-label="Delete message"
+              title="Delete this message"
+            >
+              {isDeleting ? (
+                <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+              ) : (
+                <Trash2 className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import prettierConfig from "eslint-config-prettier";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
+import reactCompiler from "eslint-plugin-react-compiler";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -16,6 +17,7 @@ export default tseslint.config(
       react,
       "react-hooks": reactHooks,
       "jsx-a11y": jsxA11y,
+      "react-compiler": reactCompiler,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -42,6 +44,9 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-explicit-any": "warn",
 
+      // React Compiler rules
+      "react-compiler/react-compiler": "error",
+
       // Remove prettier/prettier rule - let Prettier handle formatting separately
     },
   },
@@ -53,6 +58,7 @@ export default tseslint.config(
       "seed-data.js",
       "setup-env.js",
       "deploy-to-self-hosted.js",
+      "startup-sync-admin-key.mjs",
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -77,6 +83,17 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist", "node_modules", "convex/_generated", "echoes-of-aeria/**"],
+    ignores: [
+      "dist", 
+      "node_modules", 
+      "convex/_generated", 
+      "echoes-of-aeria/**",
+      "playwright-report/**",
+      "test-results/**",
+      "test-results-*/**",
+      "react-compiler.config.js",
+      "startup-sync-admin-key.mjs",
+      "src/hooks/usePerformanceMonitoring.ts"
+    ],
   }
 );

@@ -1,19 +1,19 @@
 import { act } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useConvexMessages, useConvexSendMessage } from "@/hooks/useConvexChat";
 import {
   useOptimizedWorkingMessages,
   useOptimizedWorkingSendMessage,
 } from "@/hooks/useOptimizedWorkingBackend";
-import { useUser } from "@/hooks/useUser";
 import { render, screen, waitFor } from "@/test/test-utils";
 
 import { SmartChatContainer } from "../SmartChatContainer";
 
-// Mock all the hooks
-vi.mock("@/hooks/useUser", () => ({
-  useUser: vi.fn(),
+// Mock AuthContext (override global mock)
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: vi.fn(),
 }));
 
 vi.mock("@/hooks/useConvexChat", () => ({
@@ -47,7 +47,7 @@ vi.mock("@/components/theme-toggle", () => ({
   ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
 }));
 
-const mockUseUser = useUser as ReturnType<typeof vi.fn>;
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
 const mockUseConvexMessages = useConvexMessages as ReturnType<typeof vi.fn>;
 const mockUseConvexSendMessage = useConvexSendMessage as ReturnType<
   typeof vi.fn
@@ -62,9 +62,9 @@ describe("SmartChatContainer", () => {
     vi.clearAllMocks();
 
     // Default mock implementations
-    mockUseUser.mockReturnValue({
-      currentUser: { id: "1", name: "Test User", email: "test@test.com" },
-      isLoading: false,
+    mockUseAuth.mockReturnValue({
+      user: { _id: "1", name: "Test User", email: "test@test.com" },
+      loading: false,
     });
 
     mockUseConvexMessages.mockReturnValue({
@@ -92,9 +92,9 @@ describe("SmartChatContainer", () => {
   });
 
   it("shows loading state when user is loading", () => {
-    mockUseUser.mockReturnValue({
-      currentUser: null,
-      isLoading: true,
+    mockUseAuth.mockReturnValue({
+      user: null,
+      loading: true,
     });
 
     render(<SmartChatContainer />);
@@ -115,9 +115,9 @@ describe("SmartChatContainer", () => {
   });
 
   it("shows authentication error when user is null", () => {
-    mockUseUser.mockReturnValue({
-      currentUser: null,
-      isLoading: false,
+    mockUseAuth.mockReturnValue({
+      user: null,
+      loading: false,
     });
 
     render(<SmartChatContainer />);
@@ -128,12 +128,12 @@ describe("SmartChatContainer", () => {
     ).toBeInTheDocument();
   });
 
-  it("displays user information in header", async () => {
+  it("renders main content areas", async () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Test User")).toHaveLength(2); // Desktop and mobile views
-      expect(screen.getAllByText("Online")).toHaveLength(2); // Desktop and mobile status
+      expect(screen.getByRole("main")).toBeInTheDocument();
+      expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     });
   });
 
@@ -141,14 +141,13 @@ describe("SmartChatContainer", () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getByText("Convex Chat")).toBeInTheDocument();
       expect(screen.getByTestId("smart-chat-messages")).toBeInTheDocument();
       expect(screen.getByTestId("chat-input")).toBeInTheDocument();
-      expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
+      // Convex Chat title and theme toggle are in App.tsx, not SmartChatContainer
     });
   });
 
-  it("shows Convex WebSocket badge when using convex backend", async () => {
+  it("uses Convex backend when convex messages are ready", async () => {
     // Mock convex backend being ready
     mockUseConvexMessages.mockReturnValue({
       messages: [],
@@ -159,11 +158,12 @@ describe("SmartChatContainer", () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getByText("🚀 WebSockets")).toBeInTheDocument();
+      const messagesComponent = screen.getByTestId("smart-chat-messages");
+      expect(messagesComponent).toHaveAttribute("data-mode", "convex");
     });
   });
 
-  it("shows Optimized Polling badge when using working backend", async () => {
+  it("falls back to working backend when convex fails", async () => {
     // Mock convex failing, working backend ready
     mockUseConvexMessages.mockReturnValue({
       messages: undefined,
@@ -181,7 +181,8 @@ describe("SmartChatContainer", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("🔄 Optimized Polling")).toBeInTheDocument();
+        const messagesComponent = screen.getByTestId("smart-chat-messages");
+        expect(messagesComponent).toHaveAttribute("data-mode", "working");
       },
       { timeout: 4000 }
     ); // Account for detection timeout
@@ -209,28 +210,28 @@ describe("SmartChatContainer", () => {
     expect(chatInput).toHaveAttribute("data-disabled", "true");
   });
 
-  it("shows user avatar with initials", () => {
+  it("provides proper accessibility structure", () => {
     render(<SmartChatContainer />);
 
-    const avatars = screen.getAllByText("TU"); // Test User initials
-    expect(avatars).toHaveLength(2); // Desktop and mobile views
-    avatars.forEach((avatar) => {
-      expect(avatar).toHaveAttribute("aria-label", "Avatar for Test User");
-    });
+    // Check for live region for screen reader announcements
+    const liveRegion = screen.getByLabelText("New messages");
+    expect(liveRegion).toBeInTheDocument();
+    expect(liveRegion).toHaveAttribute("aria-live", "polite");
   });
 
-  it("handles mobile layout user info", () => {
+  it("handles chat input visibility", () => {
     render(<SmartChatContainer />);
 
-    // Should show user name in mobile section too
-    expect(screen.getAllByText("Test User")).toHaveLength(2);
+    // Should show chat input by default
+    expect(screen.getByTestId("chat-input")).toBeInTheDocument();
   });
 
   it("includes proper ARIA roles and labels", () => {
     render(<SmartChatContainer />);
 
-    // Should have main content structure
-    expect(screen.getByRole("banner")).toBeInTheDocument(); // CardHeader acts as banner
+    // Should have main content structure (banner is in App.tsx, not SmartChatContainer)
+    expect(screen.getByRole("main")).toBeInTheDocument();
+    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
   });
 
   it("falls back to working backend after timeout", async () => {

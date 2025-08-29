@@ -3,6 +3,73 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 
+// Helper function to validate email format
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Helper function to validate user data integrity
+async function validateUserAccount(ctx: any, userId: Id<"users">) {
+  const user = await ctx.db.get(userId);
+  if (!user) return { valid: false, error: "User not found" };
+  
+  if (!user.name || user.name.trim().length === 0) {
+    return { valid: false, error: "User missing name" };
+  }
+  
+  if (!user.email || !isValidEmail(user.email)) {
+    return { valid: false, error: "User has invalid email" };
+  }
+  
+  return { valid: true, user };
+}
+
+// Debug function to help troubleshoot authentication issues
+export const debugUser = query({
+  args: { 
+    email: v.optional(v.string()),
+    userId: v.optional(v.id("users"))
+  },
+  handler: async (ctx, args) => {
+    if (args.userId) {
+      const user = await ctx.db.get(args.userId);
+      return {
+        method: "userId",
+        user,
+        timestamp: Date.now()
+      };
+    }
+    
+    if (args.email) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", args.email!.toLowerCase().trim()))
+        .first();
+      return {
+        method: "email",
+        email: args.email.toLowerCase().trim(),
+        user,
+        timestamp: Date.now()
+      };
+    }
+    
+    // Return all users for debugging (limit to 10)
+    const users = await ctx.db.query("users").take(10);
+    return {
+      method: "all",
+      users: users.map(u => ({
+        _id: u._id,
+        email: u.email,
+        name: u.name,
+        createdAt: u.createdAt
+      })),
+      count: users.length,
+      timestamp: Date.now()
+    };
+  },
+});
+
 // User Management Functions
 export const createUser = mutation({
   args: {
@@ -11,28 +78,37 @@ export const createUser = mutation({
     avatar: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Check if user with email already exists
-    if (args.email) {
-      const existingUser = await ctx.db
-        .query("users")
-        .withIndex("by_email", (q) => q.eq("email", args.email))
-        .first();
-      
-      if (existingUser) {
-        return existingUser._id;
+    console.log("CreateUser attempt:", { name: args.name, email: args.email });
+    
+    try {
+      // Check if user with email already exists
+      if (args.email) {
+        const existingUser = await ctx.db
+          .query("users")
+          .withIndex("by_email", (q) => q.eq("email", args.email!.toLowerCase().trim()))
+          .first();
+        
+        if (existingUser) {
+          console.log("User already exists, returning existing:", existingUser._id);
+          return existingUser._id;
+        }
       }
+
+      const userId = await ctx.db.insert("users", {
+        name: args.name,
+        email: args.email ? args.email.toLowerCase().trim() : undefined,
+        avatar: args.avatar,
+        isOnline: true,
+        lastSeen: Date.now(),
+        createdAt: Date.now(),
+      });
+
+      console.log("CreateUser successful:", { userId, name: args.name, email: args.email });
+      return userId;
+    } catch (error) {
+      console.error("CreateUser error:", error);
+      throw error;
     }
-
-    const userId = await ctx.db.insert("users", {
-      name: args.name,
-      email: args.email,
-      avatar: args.avatar,
-      isOnline: true,
-      lastSeen: Date.now(),
-      createdAt: Date.now(),
-    });
-
-    return userId;
   },
 });
 
@@ -79,7 +155,7 @@ export const sendMessage = mutation({
 
     const messageId = await ctx.db.insert("messages", {
       senderId: args.senderId,
-      senderName: sender.name,
+      senderName: sender.name || "Unknown User",
       content: args.content,
       type: args.type,
       storageId: args.storageId,
@@ -94,6 +170,198 @@ export const sendMessage = mutation({
   },
 });
 
+// Authentication functions
+export const signUp = mutation({
+  args: {
+    email: v.string(),
+    password: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, { email, password, name }) => {
+    console.log("SignUp attempt:", { email, name });
+
+    // Validate inputs
+    if (!email || !isValidEmail(email)) {
+      console.error("Invalid email format:", email);
+      throw new Error("Please provide a valid email address");
+    }
+    
+    if (!password || password.length < 3) {
+      console.error("Invalid password");
+      throw new Error("Password must be at least 3 characters long");
+    }
+    
+    if (!name || name.trim().length === 0) {
+      console.error("Invalid name");
+      throw new Error("Please provide a valid name");
+    }
+
+    try {
+      // Check if user with this email already exists
+      const existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", email.toLowerCase().trim()))
+        .first();
+      
+      if (existingUser) {
+        console.error("User already exists:", email);
+        throw new Error("An account with this email already exists");
+      }
+
+      // Create user with original email (no timestamp modification)
+      const userId = await ctx.db.insert("users", {
+        email: email.toLowerCase().trim(),
+        name: name.trim(),
+        passwordHash: password, // TODO: Hash password in production
+        createdAt: Date.now(),
+        isOnline: true,
+        lastSeen: Date.now(),
+      });
+
+      console.log("SignUp successful:", { userId, email, name });
+      return { 
+        userId, 
+        email: email.toLowerCase().trim(), 
+        name: name.trim(),
+        success: true
+      };
+    } catch (error) {
+      console.error("SignUp error:", error);
+      throw error;
+    }
+  },
+});
+
+export const signIn = mutation({
+  args: {
+    email: v.string(),
+    password: v.string(),
+  },
+  handler: async (ctx, { email, password }) => {
+    console.log("SignIn attempt:", { email });
+
+    // Validate inputs
+    if (!email || !isValidEmail(email)) {
+      console.error("Invalid email format:", email);
+      throw new Error("Please provide a valid email address");
+    }
+    
+    if (!password) {
+      console.error("Missing password");
+      throw new Error("Please provide a password");
+    }
+
+    try {
+      // Find user by exact email match (normalized)
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", email.toLowerCase().trim()))
+        .first();
+
+      if (!user) {
+        console.error("User not found:", email);
+        throw new Error("Invalid email or password");
+      }
+
+      // Check password
+      if (user.passwordHash !== password) {
+        console.error("Invalid password for user:", email);
+        throw new Error("Invalid email or password");
+      }
+
+      // Ensure user has required fields
+      if (!user.name) {
+        console.error("User missing name field:", user._id);
+        throw new Error("User account is incomplete");
+      }
+
+      // Update user status
+      await ctx.db.patch(user._id, {
+        isOnline: true,
+        lastSeen: Date.now(),
+      });
+
+      console.log("SignIn successful:", { userId: user._id, email: user.email });
+      return { 
+        userId: user._id, 
+        email: user.email, 
+        name: user.name,
+        success: true
+      };
+    } catch (error) {
+      console.error("SignIn error:", error);
+      throw error;
+    }
+  },
+});
+
+export const signOut = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { userId }) => {
+    await ctx.db.patch(userId, {
+      isOnline: false,
+      lastSeen: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+export const getCurrentUser = query({
+  args: {
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { userId }) => {
+    if (!userId) return null;
+    
+    try {
+      const user = await ctx.db.get(userId);
+      if (!user) return null;
+
+      return {
+        _id: user._id,
+        email: user.email || "",
+        name: user.name || "Unknown User",
+        isOnline: user.isOnline || false,
+        lastSeen: user.lastSeen || user.createdAt,
+        createdAt: user.createdAt,
+      };
+    } catch (error) {
+      console.error("getCurrentUser error:", error);
+      return null;
+    }
+  },
+});
+
+
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Only allow users to delete their own messages
+    if (message.senderId !== args.userId) {
+      throw new Error("You can only delete your own messages");
+    }
+    
+    // Soft delete by marking as deleted
+    await ctx.db.patch(args.messageId, {
+      isDeleted: true,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 // Function to match the working deployed API with file support
 export const getMessages = query({
   args: {},
@@ -101,6 +369,7 @@ export const getMessages = query({
     // Extended to include file attachment data for image previews
     const messages = await ctx.db
       .query("messages")
+      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
 
     return messages.map(msg => ({
@@ -108,6 +377,7 @@ export const getMessages = query({
       _creationTime: msg.createdAt || msg._creationTime,
       body: msg.content,
       user: msg.senderName,
+      senderId: msg.senderId, // This is the actual user ID from the database
       // File attachment fields for image previews
       type: msg.type || "text",
       storageId: msg.storageId,

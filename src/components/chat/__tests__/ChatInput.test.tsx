@@ -126,7 +126,9 @@ describe("ChatInput", () => {
       target: { files: [largeFile] },
     });
 
-    expect(alertSpy).toHaveBeenCalledWith("File size must be less than 10MB");
+    expect(alertSpy).toHaveBeenCalledWith(
+      "File size must be less than 10MB. Large files: large.txt"
+    );
     alertSpy.mockRestore();
   });
 

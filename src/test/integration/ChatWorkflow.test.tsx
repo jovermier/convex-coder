@@ -2,17 +2,17 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SmartChatContainer } from "@/components/chat/SmartChatContainer";
+import { useAuth } from "@/contexts/AuthContext";
 import { useConvexMessages, useConvexSendMessage } from "@/hooks/useConvexChat";
 import {
   useOptimizedWorkingMessages,
   useOptimizedWorkingSendMessage,
 } from "@/hooks/useOptimizedWorkingBackend";
-import { useUser } from "@/hooks/useUser";
 import { fireEvent, render, screen, waitFor } from "@/test/test-utils";
 
 // Mock the hooks with more realistic behavior
-vi.mock("@/hooks/useUser", () => ({
-  useUser: vi.fn(),
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: vi.fn(),
 }));
 
 vi.mock("@/hooks/useConvexChat", () => ({
@@ -25,7 +25,16 @@ vi.mock("@/hooks/useOptimizedWorkingBackend", () => ({
   useOptimizedWorkingSendMessage: vi.fn(),
 }));
 
-const mockUseUser = useUser as ReturnType<typeof vi.fn>;
+// Mock SmartChatMessages to provide testid for mode checking
+vi.mock("@/components/chat/SmartChatMessages", () => ({
+  SmartChatMessages: ({ mode }: { mode: string }) => (
+    <div data-testid="smart-chat-messages" data-mode={mode}>
+      Mock Messages
+    </div>
+  ),
+}));
+
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
 const mockUseConvexMessages = useConvexMessages as ReturnType<typeof vi.fn>;
 const mockUseConvexSendMessage = useConvexSendMessage as ReturnType<
   typeof vi.fn
@@ -36,7 +45,11 @@ const mockUseOptimizedWorkingSendMessage =
   useOptimizedWorkingSendMessage as ReturnType<typeof vi.fn>;
 
 describe("Chat Workflow Integration Tests", () => {
-  const mockUser = { id: "1", name: "Test User", email: "test@test.com" };
+  const mockUser = {
+    _id: "test-user-id",
+    name: "Test User",
+    email: "test@example.com",
+  };
   const mockMessages = [
     {
       id: "1",
@@ -50,9 +63,9 @@ describe("Chat Workflow Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseUser.mockReturnValue({
-      currentUser: mockUser,
-      isLoading: false,
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      loading: false,
     });
   });
 
@@ -85,11 +98,12 @@ describe("Chat Workflow Integration Tests", () => {
 
     // Wait for component to load
     await waitFor(() => {
-      expect(screen.getByText("Convex Chat")).toBeInTheDocument();
+      expect(screen.getByRole("main")).toBeInTheDocument();
     });
 
-    // Verify Convex backend is detected
-    expect(screen.getByText("🚀 WebSockets")).toBeInTheDocument();
+    // Verify Convex backend is detected by checking SmartChatMessages mode
+    const messagesComponent = screen.getByTestId("smart-chat-messages");
+    expect(messagesComponent).toHaveAttribute("data-mode", "convex");
 
     // Type a message
     const textarea = screen.getByRole("textbox");
@@ -146,7 +160,8 @@ describe("Chat Workflow Integration Tests", () => {
     // Wait for fallback detection (with timeout)
     await waitFor(
       () => {
-        expect(screen.getByText("🔄 Optimized Polling")).toBeInTheDocument();
+        const messagesComponent = screen.getByTestId("smart-chat-messages");
+        expect(messagesComponent).toHaveAttribute("data-mode", "working");
       },
       { timeout: 4000 }
     );
@@ -194,7 +209,7 @@ describe("Chat Workflow Integration Tests", () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getByText("Convex Chat")).toBeInTheDocument();
+      expect(screen.getByRole("main")).toBeInTheDocument();
     });
 
     // Create and upload a file
@@ -270,7 +285,7 @@ describe("Chat Workflow Integration Tests", () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getByText("Convex Chat")).toBeInTheDocument();
+      expect(screen.getByRole("main")).toBeInTheDocument();
     });
 
     const textarea = screen.getByRole("textbox");
@@ -325,7 +340,7 @@ describe("Chat Workflow Integration Tests", () => {
     render(<SmartChatContainer />);
 
     await waitFor(() => {
-      expect(screen.getByText("Convex Chat")).toBeInTheDocument();
+      expect(screen.getByRole("main")).toBeInTheDocument();
     });
 
     // Suppress console.error for this test since we expect an error

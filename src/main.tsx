@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 import App from "./App";
 import "./index.css";
@@ -26,9 +27,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary onReset={() => window.location.reload()}>
       <ThemeProvider defaultTheme="dark" storageKey="convex-ui-theme">
         <ConvexProvider client={convex}>
-          <ErrorBoundary onReset={() => window.location.reload()}>
-            <App />
-          </ErrorBoundary>
+          <AuthProvider>
+            <ErrorBoundary onReset={() => window.location.reload()}>
+              <App />
+            </ErrorBoundary>
+          </AuthProvider>
         </ConvexProvider>
       </ThemeProvider>
     </ErrorBoundary>

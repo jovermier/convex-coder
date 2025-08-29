@@ -13,6 +13,7 @@ interface ConvexMessage {
   _creationTime: number;
   body: string;
   user: string;
+  senderId?: string; // The actual user ID
   // File attachment fields (may not exist on all messages)
   type?: "text" | "image" | "file";
   storageId?: Id<"_storage">;
@@ -35,7 +36,7 @@ function transformConvexMessage(msg: ConvexMessage) {
   return {
     _id: msg._id,
     _creationTime: msg._creationTime,
-    senderId: msg.user,
+    senderId: msg.senderId!, // senderId should always be the actual user ID from the database
     senderName: msg.user,
     content: msg.body,
     type: msg.type ?? ("text" as const), // Use nullish coalescing for cleaner fallback
@@ -117,14 +118,9 @@ export function useConvexSendMessage() {
           // Test if generateUploadUrl is available (single test)
           if (fileUploadMethod === null) {
             try {
-              console.log(
-                "🔍 Testing if file upload functions are deployed..."
-              );
               await generateUploadUrlMutation();
               setFileUploadMethod("traditional");
-              console.log("✅ File upload functions detected!");
             } catch (testErr) {
-              console.log("❌ File upload functions not available:", testErr);
               setFileUploadMethod("none");
               throw new Error(
                 "File uploads are not available on this deployment. The backend needs to be updated with file storage functions."
@@ -134,8 +130,6 @@ export function useConvexSendMessage() {
 
           // If we reach here, traditional method should work
           try {
-            console.log("📎 Uploading file via Convex storage:", file.name);
-
             const uploadUrl = await generateUploadUrlMutation();
 
             const uploadResult = await fetch(uploadUrl, {
@@ -173,8 +167,6 @@ export function useConvexSendMessage() {
                 content ||
                 `Shared ${file.type.startsWith("image/") ? "image" : "file"}: ${file.name}`,
             };
-
-            console.log("✅ File upload successful!");
           } catch (uploadErr) {
             console.error("File upload failed:", uploadErr);
             setFileUploadMethod("none");
@@ -187,12 +179,9 @@ export function useConvexSendMessage() {
         // Send message
         await sendMessageMutation(messageData);
 
-        console.log(
-          "✅ Message sent successfully" + (file ? " with file attachment" : "")
-        );
         return true;
       } catch (err) {
-        console.error("❌ Failed to send message:", err);
+        console.error("Failed to send message:", err);
         throw err;
       } finally {
         setIsSending(false);
